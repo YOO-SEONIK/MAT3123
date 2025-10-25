@@ -21,7 +21,7 @@ Python, Numpy, Pandas의 버전을 확인하고 그래프를 설정값을 조절
 ## 3. 고무 링의 온도 분포 T(r)
 이 단계는 속 빈 원통(고무 링)의 반지름 방향 정상상태 온도분포 $T(r)$를 구한다. 축대칭, 축방향 열흐름 무시, 고체 내부 생성열을 $0$, 열전도도 $k$ 일정 가정에서 지배식은 d/dr(r dT/dr)=0 이고 해는 $T(r)=C1ln(r)+C2$ 이다. 내부/외부 표면에는 대류 경계가 적용된다: $r=r_i$ 에서 -k dT/dr = h_i(T - Ti_inf), $r=r_o$ 에서 -k dT/dr = h_o*(T - To_inf). 이를 C1, C2에 대한 선형 2x2 방정식으로 정리해 행렬 $M * [C1 C2]^T = rhs$ 를 만들고, numpy 선형해법으로 $C1$, $C2$ 를 푼다. 그런 다음 $r_i~r_o$ 사이를 균일 격자로 샘플링해 $T(r)=C1ln(r)+C2$ 값을 계산해 반환한다. 출력은 반지름 벡터 $r[m]$와 온도 벡터 $T[^\circ\mathrm{C}]$ 이며, 이 분포는 이후 열팽창 변형률 및 응력 근사 계산의 입력으로 사용된다. 가정상 $k$ 와 물성은 상수이고, 복사나 비선형 효과는 무시한다.
 
-$\dfrac{\mathrm{d}}{\mathrm{d}r}\!\left(r\,\dfrac{\mathrm{d}T}{\mathrm{d}r}\right)=0$
+$\dfrac{\mathrm{d}}{\mathrm{d}r}\left(r\dfrac{\mathrm{d}T}{\mathrm{d}r}\right)=0$
 
 
 ## 4. 온도→물성/열팽창→응력(근사) 라벨러
