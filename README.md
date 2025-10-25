@@ -67,7 +67,7 @@ Python, Numpy, Pandas의 버전을 확인하고 그래프를 설정값을 조절
 
 이 단계는 실제 운전과 비슷한 온도 변동이 있을 때 고무 링에 걸리는 변형률을 정량적으로 진단한다. 먼저 scenario_noise로 2초 간격, 총 6시간짜리 T_in(t) 시나리오를 만들고(평균 80 degC, +-5 degC, 1차 스무딩 60 s), 10단계에서 학습한 MLP 서로게이트로 각 시점의 등가응력 sigma(t)를 예측한다. 기록 길이 record_hours_N = len(tN)DT_S/3600.0 로 계산해 이후 수명 외삽의 기준으로도 쓸 수 있다. 다음으로 온도의존 탄성계수 E(T) = E25exp(-beta*(T-25))를 사용해 eps(t) = sigma(t)/E(T)를 구한다. eps(t)를 rainflow에 넣어 사이클별 진폭 eps_a, 개수(count)를 얻고, 요약 통계(min, median, max, p01, p05, p10, p90, p95)를 출력해 변형률 분포를 수치로 확인한다. 특히 피로한계 후보 eps_e를 바로 잡을 수 있도록 세 가지 권장값을 함께 제시한다: conservative(하위 10% 커트), typical(중앙값의 50%), loose(중앙값의 25%). 마지막으로 세 가지 플롯을 제공한다. (1) 시간 대비 T_in(t) 파형, (2) 시간 대비 eps(t) [%] 파형, (3) rainflow로 얻은 eps_a[%] 히스토그램(가중치=사이클 수). 히스토그램 x축은 실제 데이터 상단 구간 낭비를 줄이기 위해 0~min(0.04, max(eps_a_pct))로 제한하고, 미세한 분포를 보려 bins를 1000개로 설정했다. 
 
-# 6. Life Prediction
+# Life Prediction
 
 ## 16. ε–N 수명 계산 함수: sigma(t) → ε(t) → 레인플로우 → Miner 손상 → 수명[h]
 
