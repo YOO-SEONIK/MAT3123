@@ -59,7 +59,7 @@ Python, Numpy, Pandas의 버전을 확인하고 그래프의 설정값을 조절
 
 label_one_sample은 다음 순서로 동작한다: 
 
-1. 유속 $U$, 내경 $D_i$로 내부 대류계수 $h_i$ 계산 → 2. 내부/외부 대류 경계와 고무 열전도율 $k$로 속 빈 원통의 정상상태 온도장 $T(r)$ 해석 → 3. $T_{avg}$로 $E$ 산출 → 4. $ε_{th}(r)$ 계산 → 5. $σ_θ(r)$ 와 그 최대치 max_vm 산출 → 6. 허용응력 $σ_{allow}$와 비교해 pass_flag를 $1$과 $0$으로 부여
+(1) 유속 $U$, 내경 $D_i$로 내부 대류계수 $h_i$ 계산 → (2) 내부/외부 대류 경계와 고무 열전도율 $k$로 속 빈 원통의 정상상태 온도장 $T(r)$ 해석 → (3) $T_{avg}$로 $E$ 산출 → (4) $ε_{th}(r)$ 계산 → (5) $σ_θ(r)$ 와 그 최대치 max_vm 산출 → (6) 허용응력 $σ_{allow}$와 비교해 pass_flag를 $1$과 $0$으로 부여
 
 반환에는 $r$, $T(r)$, $E$, $ε_th(r)$, $σ_θ(r)$, max_vm, pass_flag, $h_i$가 포함되어 이후 데이터셋 생성과 모델 학습에 바로 쓸 수 있다. 
 
@@ -191,11 +191,17 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해(grad 계산 �
 
 ## 16. ε–N 수명 계산 함수: sigma(t) → ε(t) → 레인플로우 → Miner 손상 → 수명[h]
 
-이 함수는 시간축 t와 온도 $T_{in}(t)$, 서로게이트가 예측한 응력 $sigma(t)$, 재료 상수(const의 E25, beta)를 받아 ε–N 모델로 누적손상 D와 예상 수명 life_hours를 계산한다. 절차는 ① 온도의존 탄성계수 E(T)=E25*exp(-beta*(T-25))로 순간 변형률 시계열 eps_t = sigma/E(T)를 만든다. ② 변형률 파형을 rainflow에 넣어 사이클별 진폭 eps_a와 개수 cnt를 얻는다. ③ 피로한계 eps_e(진폭 컷) 이상만 선택해 ε–N 관계 Nf = (eps0/eps_a)^b로 사이클당 허용 반복수를 계산하고, ④ Miner 합산 D = Σ(cnt/Nf)로 누적손상을 구한다. ⑤ 기록 길이(시나리오 길이)를 record_hours로 환산한 뒤, 수명[h] ≈ record_hours / D 로 외삽한다(분모 0 방지를 위해 작은 하한 사용). 입력 파라미터 의미: eps0(기준 변형률), b(지수), eps_e(피로한계), rf_eps(레인플로우용 미세노이즈 컷). 반환값은 (life_hours, D, record_hours, rf, eps_t, eps_a, cnt)로, 수명과 손상뿐 아니라 중간 산물(레인플로우 결과, 변형률 시계열/진폭, 사이클 수)까지 함께 제공해 결과 해석과 파라미터 튜닝(EPS0, b, EPS_E 재조정)에 바로 활용할 수 있다.
+이 단계는 시간축 $t$와 온도 $T_{in}(t)$, 서로게이트가 예측한 응력 $sigma(t)$, 재료 상수($const$의 $E_25$, $\beta$)를 받아 $ε–N$ 모델로 누적손상 $D$와 예상 수명 life_hours를 계산한다. 
+
+절차는 (1) 온도의존 탄성계수 E(T)=E25*exp(-beta*(T-25))로 순간 변형률 시계열 $\epsilon_t = \sigma/E(T)$를 만든다. 
+
+② 변형률 파형을 rainflow에 넣어 사이클별 진폭 eps_a와 개수 cnt를 얻는다. ③ 피로한계 eps_e(진폭 컷) 이상만 선택해 ε–N 관계 Nf = (eps0/eps_a)^b로 사이클당 허용 반복수를 계산하고, ④ Miner 합산 D = Σ(cnt/Nf)로 누적손상을 구한다. ⑤ 기록 길이(시나리오 길이)를 record_hours로 환산한 뒤, 수명[h] ≈ record_hours / D 로 외삽한다(분모 0 방지를 위해 작은 하한 사용). 입력 파라미터 의미: eps0(기준 변형률), b(지수), eps_e(피로한계), rf_eps(레인플로우용 미세노이즈 컷). 반환값은 (life_hours, D, record_hours, rf, eps_t, eps_a, cnt)로, 수명과 손상뿐 아니라 중간 산물(레인플로우 결과, 변형률 시계열/진폭, 사이클 수)까지 함께 제공해 결과 해석과 파라미터 튜닝(EPS0, b, EPS_E 재조정)에 바로 활용할 수 있다.
 
 ## 17. e–N 기반 손상/수명 계산(요약 실행)
 
-이 단계는 앞에서 준비한 시나리오(tN, TinN, constN), 서로게이트 응력 시계열(sigmaN), 그리고 16번의 함수 compute_life_eN_from_sigma를 그대로 호출해 누적손상 D와 예상 수명 life_hours를 한 번에 산출한다. 입력 파라미터 EPS0(기준 변형률), B(지수), EPS_E(피로한계 진폭)는 고무 피로 특성에 직접 연결되므로 결과에 큰 영향을 준다. 함수 내부에서는 E(T)로부터 변형률 eps(t)을 만들고, rainflow로 사이클 진폭 eps_a를 계수한 뒤, e–N 관계 Nf=(EPS0/eps_a)^B와 Miner 합산으로 D를 계산한다. 출력 로그는 (1) sigmaN의 분포 요약(min, max, std), (2) 기록 길이 record_hours, (3) 손상 D와 외삽 수명 life_hours를 보여준다. 해석 팁: D 약 1이 설계 한계, life_hours는 record_hours를 D로 나눈 외삽치이며, EPS_E를 높이면 미세 사이클이 무시되어 수명이 길어지고, 반대로 낮추면 더 보수적 결과가 나온다.
+이 단계는 앞에서 준비한 시나리오(tN, TinN, constN), 서로게이트 응력 시계열(sigmaN), 그리고 이전에 정의한 함수 compute_life_eN_from_sigma를 그대로 호출해 누적손상 D와 예상 수명 life_hours를 한 번에 산출한다. 
+
+입력 파라미터 EPS0(기준 변형률), B(지수), EPS_E(피로한계 진폭)는 고무 피로 특성에 직접 연결되므로 결과에 큰 영향을 준다. 함수 내부에서는 E(T)로부터 변형률 eps(t)을 만들고, rainflow로 사이클 진폭 eps_a를 계수한 뒤, e–N 관계 Nf=(EPS0/eps_a)^B와 Miner 합산으로 D를 계산한다. 출력 로그는 (1) sigmaN의 분포 요약(min, max, std), (2) 기록 길이 record_hours, (3) 손상 D와 외삽 수명 life_hours를 보여준다. 해석 팁: D 약 1이 설계 한계, life_hours는 record_hours를 D로 나눈 외삽치이며, EPS_E를 높이면 미세 사이클이 무시되어 수명이 길어지고, 반대로 낮추면 더 보수적 결과가 나온다.
 
 
 
