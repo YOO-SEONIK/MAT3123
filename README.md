@@ -335,7 +335,7 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해 각 epoch마�
 
 <img width="700" height="111" alt="image" src="https://github.com/user-attachments/assets/cc0ffc99-1e31-4e6f-928b-2385f6693b9e" />
 
-<img width="704" height="464" alt="image" src="https://github.com/user-attachments/assets/9a3af7d3-d8a0-4f3a-9271-744829a35ea2" />
+<img width="704" height="464" alt="image" src="https://github.com/user-attachments/assets/e4b9e279-57a7-4a88-a71d-437e17ffa6d1" />
 
 <img width="704" height="464" alt="image" src="https://github.com/user-attachments/assets/4d9d7dc8-b974-4d63-a0b4-f814760ae583" />
 
