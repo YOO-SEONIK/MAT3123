@@ -252,7 +252,9 @@ eps(t)를 rainflow에 넣어 사이클별 진폭 eps_a, 개수(count)를 얻고,
 
 절차는 (1) 온도의존 탄성계수 E(T)=E25*exp(-beta*(T-25))로 순간 변형률 시계열 $\epsilon_t = \sigma/E(T)$를 만든다. 
 
-② 변형률 파형을 rainflow에 넣어 사이클별 진폭 eps_a와 개수 cnt를 얻는다. ③ 피로한계 eps_e(진폭 컷) 이상만 선택해 ε–N 관계 Nf = (eps0/eps_a)^b로 사이클당 허용 반복수를 계산하고, ④ Miner 합산 D = Σ(cnt/Nf)로 누적손상을 구한다. ⑤ 기록 길이(시나리오 길이)를 record_hours로 환산한 뒤, 수명[h] ≈ record_hours / D 로 외삽한다(분모 0 방지를 위해 작은 하한 사용). 입력 파라미터 의미: eps0(기준 변형률), b(지수), eps_e(피로한계), rf_eps(레인플로우용 미세노이즈 컷). 반환값은 (life_hours, D, record_hours, rf, eps_t, eps_a, cnt)로, 수명과 손상뿐 아니라 중간 산물(레인플로우 결과, 변형률 시계열/진폭, 사이클 수)까지 함께 제공해 결과 해석과 파라미터 튜닝(EPS0, b, EPS_E 재조정)에 바로 활용할 수 있다.
+② 변형률 파형을 rainflow에 넣어 사이클별 진폭 eps_a와 개수 cnt를 얻는다. ③ 피로한계 eps_e(진폭 컷) 이상만 선택해 ε–N 관계 Nf = (eps0/eps_a)^b로 사이클당 허용 반복수를 계산하고, ④ Miner 합산 D = Σ(cnt/Nf)로 누적손상을 구한다. ⑤ 기록 길이(시나리오 길이)를 record_hours로 환산한 뒤, 수명[h] ≈ record_hours / D 로 외삽한다(분모 0 방지를 위해 작은 하한 사용). 
+
+입력 파라미터 의미: eps0(기준 변형률), b(지수), eps_e(피로한계), rf_eps(레인플로우용 미세노이즈 컷). 반환값은 (life_hours, D, record_hours, rf, eps_t, eps_a, cnt)로, 수명과 손상뿐 아니라 중간 산물(레인플로우 결과, 변형률 시계열/진폭, 사이클 수)까지 함께 제공해 결과 해석과 파라미터 튜닝(EPS0, b, EPS_E 재조정)에 바로 활용할 수 있다.
 
 ## 17. e–N 기반 손상/수명 계산(요약 실행)
 
