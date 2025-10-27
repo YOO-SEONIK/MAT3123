@@ -14,7 +14,8 @@ Final Project의 목표는 속이 빈 고무 패킹의 열–기계 거동을 �
 4. Sensitivity Analysis (11~12)
 5. Thermal-stress Simulation and Fatigue Assessment (13~15)
 6. Life Prediction (16~17)
-17개의 코드셀로 이루어져 있다.
+7. Risk-Life Scenario Map (18~19)
+19개의 코드셀로 이루어져 있다.
 
 # Data Setting
 ## 1. 노트북 환경 체크 + 그래프 기본 설정
