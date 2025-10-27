@@ -123,25 +123,37 @@ label_one_sample은 다음 순서로 동작한다:
 <img width="509" height="32" alt="image" src="https://github.com/user-attachments/assets/72dcde92-035e-4352-80ac-22af7aa6a049" />
 
 ## 7. 회귀 베이스라인 학습/평가
-이 단계는 max_vm(회귀 타깃)을 예측하기 위한 기본 회귀 모델들을 한 번에 학습하고 비교한다. 
+이 단계는 회귀 타깃 max_vm을 예측하기 위한 기본 회귀 모델들을 한 번에 학습하고 비교하여, 이후 심화 모델(MLP 등)의 기준 성능을 설정한다.
 
-먼저 KFold(n_splits=5, shuffle=True, random_state=42)로 교차검증 분할자를 만들고, 선형 회귀와 릿지 회귀는 파이프라인에서 StandardScaler로 입력을 표준화하여 데이터 누설을 방지한다.
+먼저 KFold(n_splits=5, shuffle=True, random_state=42)로 교차검증 분할자를 생성한다. 이는 전체 데이터를 5개의 폴드로 나누어 각 폴드가 한 번씩 검증 세트로 사용되도록 하며, shuffle=True와 고정된 시드(42)를 통해 재현성을 보장한다.
 
-스케일러는 훈련 fold에서만 fit, 검증/테스트에는 transform만 적용하고, RandomForestRegressor는 트리 기반이라 별도의 스케일링이 필요 없어 파이프라인 없이 사용한다.
+다음으로 세 가지 모델 구성을 정의한다.
 
-비교 대상은 (1) LinearRegression 파이프라인, (2) Ridge 회귀의 하이퍼파라미터 alpha를 GridSearchCV로 탐색하는 파이프라인, (3) RandomForestRegressor의 n_estimators, max_depth, min_samples_leaf를 그리드로 탐색하는 구성이다. 
+(1) LinearRegression 파이프라인 — StandardScaler()로 입력을 표준화한 후 선형 회귀를 수행하며, 파이프라인 내부에서 스케일러가 훈련 fold에 대해서만 fit되어 데이터 누설을 방지한다.
 
-GridSearchCV의 기본 평가지표는 R²이므로, 내부 교차검증에서는 R²가 최대가 되는 설정이 선택된다.
+(2) Ridge 회귀(GridSearchCV) — 동일한 파이프라인 구조로 구성하되, 하이퍼파라미터 alpha ∈ [0.01, 0.1, 1, 10, 100]을 5-가지의 교차검증으로 탐색하여 최적값을 찾는다.
 
-각 모델은 훈련 세트로 학습 후 테스트 세트에서 예측을 수행하고, 평가 지표는 RMSE(작을수록 좋음)와 R²(클수록 좋음, 음수면 기준선보다 나쁨)를 사용한다. 
+(3) RandomForestRegressor(GridSearchCV) — 비선형 트리 기반 모델로 별도 스케일링이 필요 없으며, n_estimators, max_depth, min_samples_leaf를 탐색 파라미터로 설정해 그리드 탐색을 수행한다.
 
-GridSearchCV 객체의 경우 .fit()이 끝나면 내부적으로 최적 하이퍼파라미터로 전체 훈련 세트를 재학습하므로, 이후 .predict()는 최적 모델을 사용한다. 
+GridSearchCV는 기본적으로 내부 교차검증에서 R²가 최대가 되는 설정을 선택하고, 학습 완료 후 자동으로 해당 파라미터로 전체 훈련 세트를 재학습한다.
 
-또한 best_params_를 함께 기록해 어떤 설정이 선택되었는지 남긴다. 
+각 모델은 훈련 세트(X_train, y_r_train)로 학습하고 테스트 세트(X_test, y_r_test)에서 예측을 수행하며, 성능 평가는 RMSE(작을수록 예측 오차가 작음을 의미)와 R²(1에 가까울수록 예측이 실제값에 근접함을 의미)의 두 지표를 사용한다. 
 
-최종적으로 모델명, RMSE, R², best_params를 DataFrame(reg_results)에 모아 한눈에 비교할 수 있도록 정리하며, 이 표는 이후 단계에서 최고 성능 회귀 모델 선 및 정합(Parity) 플롯 생성의 근거 자료가 된다.
+또한 GridSearchCV 객체의 경우 best_params_를 함께 저장해, 어떤 파라미터 조합이 최적으로 선택되었는지 기록한다.
 
-<img width="907" height="63" alt="image" src="https://github.com/user-attachments/assets/4d8e282b-2a90-4ac9-bc7d-6888daf6a384" />
+모든 결과는 [모델명, RMSE, R², best_params] 형식으로 reg_results DataFrame에 정리되며, RMSE 기준으로 정렬하여 콘솔에 출력한다.
+
+
+이 표를 통해 각 회귀 모델의 상대 성능을 비교할 수 있고, 향후 결과 분석에도 활용된다.
+
+마지막으로, RMSE가 가장 낮은 모델을 **최고 회귀 베이스라인(best_reg_baseline)**으로 확정하고, 해당 모델 객체와 RMSE 값을 전역 딕셔너리 REG에 저장한다.
+
+REG에는 baseline_rmse, reg_results, baseline_models_dict 등이 함께 기록되어 이후 보고서 생성 및 시각화 단계에서 그대로 재사용된다.
+
+결과적으로 이 단계는 선형/정규화형/비선형 회귀모델의 성능을 일괄 비교·기록하여 기준 모델을 확정하는 과정으로, 이후 모델 개선 효과를 정량적으로 검증하기 위한 기준점을 마련한다.
+
+<img width="916" height="93" alt="image" src="https://github.com/user-attachments/assets/5e976b14-f16e-4d35-8004-985a2bddb930" />
+
 
 
 ## 8. 분류 베이스라인 학습/튜닝/평가
