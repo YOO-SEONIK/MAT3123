@@ -116,7 +116,7 @@ label_one_sample은 다음 순서로 동작한다:
 
 마지막으로, 전체 설정과 데이터를 전역 딕셔너리 $REG$에 저장한다. 여기에는 입력과 타깃 이름(X_cols, y_reg_name, y_cls_name), 학습/테스트 세트(X_train, X_test, y_r_train, y_r_test, y_c_train, y_c_test), 그리고 보조 라벨 사용 여부가 포함된다. 
 
-입력 스케일 정규화를 위해 StandardScaler를 학습 세트(X_train)에 적합시켜(fit) 동일 스케일을 유지하도록 하고, 이후 MLP 학습 및 시나리오 해석 단계에서도 공용으로 활용할 수 있도록 REG["x_scaler"]`로 저장한다. 
+입력 스케일 정규화를 위해 StandardScaler를 학습 세트(X_train)에 적합시켜(fit) 동일 스케일을 유지하도록 하고, 이후 MLP 학습 및 시나리오 해석 단계에서도 공용으로 활용할 수 있도록 REG["x_scaler"]로 저장한다. 
 
 결과적으로 이 단계는 데이터 정합성 점검 → 보조 라벨 생성 → 재현 가능한 층화 분할 → 스케일러 저장까지 한 번에 수행하여, 이후 모델 학습 및 평가의 신뢰성을 높이는 기반을 마련한다.
 
@@ -143,10 +143,9 @@ GridSearchCV는 기본적으로 내부 교차검증에서 R²가 최대가 되�
 
 모든 결과는 [모델명, RMSE, R², best_params] 형식으로 reg_results DataFrame에 정리되며, RMSE 기준으로 정렬하여 콘솔에 출력한다.
 
-
 이 표를 통해 각 회귀 모델의 상대 성능을 비교할 수 있고, 향후 결과 분석에도 활용된다.
 
-마지막으로, RMSE가 가장 낮은 모델을 **최고 회귀 베이스라인(best_reg_baseline)**으로 확정하고, 해당 모델 객체와 RMSE 값을 전역 딕셔너리 REG에 저장한다.
+마지막으로, RMSE가 가장 낮은 모델을 최고 회귀 베이스라인(best_reg_baseline)으로 확정하고, 해당 모델 객체와 RMSE 값을 전역 딕셔너리 REG에 저장한다.
 
 REG에는 baseline_rmse, reg_results, baseline_models_dict 등이 함께 기록되어 이후 보고서 생성 및 시각화 단계에서 그대로 재사용된다.
 
@@ -155,8 +154,66 @@ REG에는 baseline_rmse, reg_results, baseline_models_dict 등이 함께 기록�
 <img width="916" height="93" alt="image" src="https://github.com/user-attachments/assets/5e976b14-f16e-4d35-8004-985a2bddb930" />
 
 
+## 8. 분류 베이스라인 학습/튜닝/평가 및 임계값(τ*)
+이 단계는 합격/불합격(pass/fail) 분류를 위한 기본 분류기들을 한 번에 학습·튜닝·평가하고, 운영 목적에 맞는 예측 확률 임계값(τ*)을 기반으로 확정한다.
 
-## 8. 분류 베이스라인 학습/튜닝/평가
+먼저 모든 모델은 동일한 교차검증 설정(KFold(n_splits=5, shuffle=True, random_state=42))으로 공정 비교한다. 평가 기본 분할은 이전 단계에서 확정된 X_train/X_test, y_c_train/y_c_test를 사용한다.
+
+모델/그리드 구성
+
+LogReg: StandardScaler → LogisticRegression(max_iter=200, solver="lbfgs") 파이프라인.
+하이퍼파라미터는 C ∈ {0.1, 1, 5, 10}, class_weight ∈ {None, "balanced"}를 GridSearchCV로 탐색한다.
+
+DT(DecisionTree): max_depth ∈ {None, 4, 6, 10}, min_samples_leaf ∈ {1, 3, 5}, class_weight ∈ {None, "balanced"}를 탐색한다.
+
+RF(RandomForest): n_estimators ∈ {200, 400}, max_depth ∈ {None, 8, 12}, min_samples_leaf ∈ {1, 3}, class_weight ∈ {None, "balanced"}를 탐색한다.
+
+GridSearchCV의 기본 scoring을 따르므로 내부 CV 선택 기준은 정확도(ACC) 이다. 탐색이 끝나면 각 모델은 해당 최적 파라미터로 전체 훈련 세트에 재학습된다.
+
+학습·평가 및 로깅
+
+테스트 세트에서 ACC, 불균형에 강한 F1, 확률 기반 판별력 ROC-AUC를 기록한다.
+
+확률 추정은 predict_proba가 있으면 양성 클래스(1)의 확률을 사용하고, 없으면 decision_function 출력에 시그모이드를 적용하여 대체한다.
+
+결과는 [model, acc, f1, auc, best_params]로 clf_results 표에 정리하고, F1 → AUC 우선 정렬로 최고 모델을 고른다.
+
+최고 모델에 대해 혼동행렬과 classification_report를 출력해 오탐/미탐 구조를 해석한다(실제 0과 1 각각의 맞춤/오분류 개수).
+
+임계값(τ*) 정책 확정
+
+최고 모델의 테스트 확률로부터 precision_recall_curve를 계산하고, 두 정책 중 하나로 τ*를 정한다.
+
+POLICY="max_f1": F1이 최대가 되는 임계값을 선택.
+
+POLICY="recall_at": 목표 재현율(TARGET_REC, 기본 0.98) 이상을 만족하는 구간 중 F1이 최대인 임계값을 선택(만족 구간이 없으면 max_f1로 폴백).
+
+최종 τ*와 채택 정책은 REG["tau_star"], REG["tau_policy"]에 저장한다.
+
+REG 저장 항목
+
+REG["clf_results"]: 모델별 ACC/F1/AUC/최적 하이퍼파라미터 표(후속 리포트에 재사용)
+
+REG["best_clf"]: 최고 분류기(그리드 최적 추정기)
+
+REG["tau_star"], REG["tau_policy"]: 확정 임계값과 정책
+
+결과적으로 이 단계는 튜닝된 분류기 간 성능 비교 → 최고 모델 선정 → 운영 목적(재현율 보장 등)에 맞춘 임계값 확정까지 일괄 수행하여, 실제 적용 시 오탐/미탐 트레이드오프를 요구 조건에 맞게 제어할 수 있도록 준비한다.
+
+
+<img width="1129" height="446" alt="image" src="https://github.com/user-attachments/assets/b73a5aae-f1f9-4d65-b819-e4376b0f5c04" />
+
+
+
+
+
+
+
+
+
+
+
+
 이 단계는 허용응력 기준의 합격/불합격 레이블을 예측하는 기본 분류기를 한 번에 학습하고 비교한다. 
 
 각 모델은 공정 비교와 누설 방지를 위해 동일한 분할과 동일한 교차검증 설정(cv=KFold(5, shuffle=True, random_state=42))을 사용한다. 
