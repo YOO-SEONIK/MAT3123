@@ -298,7 +298,7 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해 각 epoch마�
 
 그다음으로 변형률 파형을 rainflow에 넣어 사이클별 진폭 $ε_a$와 개수 $count$를 얻고, 진폭을 $ε_a = \dfrac{range}{2}$로 정의한 후, 피로한계 $ε_e$이상만 선택하여 고무용 $ε–N$ 관계 $N_f=(\dfrac{ε_0}{ε_a})^b$로 각 사이클의 허용 반복수를 계산한다.
 
-$Miner$ 합산식 $D=\Sigma \dfrac{count}{N_f}$으로 누적 손상을 구하고, 기록 길이를 record_hours = $\dfrac{t_{end}-t_{start}+\Delta t}{3600.0}$ 로 환산하여 예상수명을 life_hourts = $\dfrac{record-hours}{max(D, ε)}$ 로 계산한다(분모 0 방지를 위해 작은 하한 사용)
+$Miner$ 합산식 $D=\Sigma \dfrac{count}{N_f}$으로 누적 손상을 구하고, 기록 길이를 record_hours = $\dfrac{t_{end}-t_{start}+\Delta t}{3600.0}$ 로 환산하여 예상수명을 life_hours = $\dfrac{record\_hours}{max(D, ε)}$ 로 계산한다(분모 0 방지를 위해 작은 하한 사용)
 
 반환값은 life_hours, $D$ ,record_hours, rf, $ε(t)$, $ε_a$, $count$ 로 수명 및 손상과 함께 중간 결과(레인플로우 결과/변형률 시계열·진폭/사이클 수)까지 돌려주어 파라미터 $ε_0$, $b$, $ε_e$ 튜닝과 결과 해석에 바로 활용할 수 있다.
 
