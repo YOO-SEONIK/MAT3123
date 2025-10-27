@@ -220,7 +220,7 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해 각 epoch마�
 
 (1) 표준화된 학습 입력 Xtr 중 일부 샘플을 무작위로 선택하고  → (2) 이를 원단위로 되돌린 $X0(orig)$ 주변에서 각 피처를 +1%만큼 곱해 작은 교란을 준다($\epsilon=0.01$) → (3) 모델 출력 $y=log_{10}(σ)$의 변화를 이용해 유한차분 탄력도 $Elasticity_{fd} = \dfrac{Δlog_{10}σ}{Δlog_{10}x} \approx \dfrac{y_1 - y_0}{log_{10}(1+\epsilon)}$ 를 계산한다. 이는 입력을 1%로 변화시켰을 때 로그응력이 얼마나 변하는지를 근사적으로 표현한다.
 
-동시에 같은 샘플에 대해 자동미분으로 $\dfrac{\partial log_{10}σ}{\partial z}$를 구해 스케일러 분산을 반영하여 $\dfrac{\partial(log_{10}σ)}{\partial x} = \dfrac{1}{std(x)} \cdot \dfrac{\partial(log_{10}σ)}{\partial z}$ 로 환산한다.
+동시에 같은 샘플에 대해 자동미분으로 $\dfrac{\partial (log_{10}σ)}{\partial z}$를 구해 스케일러 분산을 반영하여 $\dfrac{\partial(log_{10}σ)}{\partial x} = \dfrac{1}{std(x)} \cdot \dfrac{\partial(log_{10}σ)}{\partial z}$ 로 환산한다.
 
 해당 값을 이용해 ($gradient$) 기반의 탄력도 $\dfrac{\partial σ}{\partial x} = (ln 10)\sigma \cdot \dfrac{\partial(log_{10}σ)}{\partial x}$를 구한다.
 
