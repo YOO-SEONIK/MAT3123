@@ -92,7 +92,7 @@ label_one_sample은 다음 순서로 동작한다:
 
 보조 라벨은 회귀 타깃 max_vm의 중앙값을 기준 임계치로 두어 max_vm <= median 이면 1, 그 외 0으로 정의해 양/음 비율을 균형에 가깝게 만든다(이상적인 구현은 훈련 세트에서 계산한 중앙값을 임계치로 사용해 데이터 누설을 더욱 줄이는 것) 
 
-마지막으로 입력 X, 회귀 y_r, 분류 y_c를 구성하고, train_test_split(stratify=y_c) 로 80/20 분할을 수행한다. 
+마지막으로 입력 $X$, 회귀 $y_r$, 분류 $y_c$를 구성하고, train_test_split(stratify=$y_c$) 로 80/20 분할을 수행한다. 
 
 stratify 옵션은 학습/테스트 양쪽에 동일한 클래스 비율을 보장해, 불균형에 따른 평가 편차를 줄인다. 
 
@@ -116,7 +116,7 @@ GridSearchCV 객체의 경우 .fit()이 끝나면 내부적으로 최적 하이�
 ## 8. 분류 베이스라인 학습/튜닝/평가
 이 단계는 허용응력 기준의 합격/불합격 레이블을 예측하는 기본 분류기를 한 번에 학습하고 비교한다. 
 
-각 모델은 공정 비교와 누설 방지를 위해 동일한 분할(6단계)과 동일한 교차검증 설정(cv=KFold(5, shuffle=True, random_state=42))을 사용한다. 
+각 모델은 공정 비교와 누설 방지를 위해 동일한 분할과 동일한 교차검증 설정(cv=KFold(5, shuffle=True, random_state=42))을 사용한다. 
 
 로지스틱 회귀(LogReg)는 StandardScaler를 포함한 파이프라인으로 감싸고 정규화 강도 C를 그리드로 탐색한다. 
 
@@ -167,11 +167,11 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해(grad 계산 �
 ## 11. MLP 민감도/탄력도 진단(입력→예측 영향 분석)
 이 단계는 학습된 MLP가 예측하는 로그응력 $y=log_{10}σ$에 대해 각 입력 피처가 얼마나 민감하게 작용하는지 국소 기울기($gradient$) 로 정량화한다. 
 
-먼저 표준화된 입력 공간(z)에서 $\dfrac{\mathrm{d}log_{10}σ}{\mathrm{d}z}$를 자동미분으로 계산해, 절댓값 평균과 표준편차로 평균 민감도(±분산) 를 막대그래프로 시각화한다. 
+먼저 표준화된 입력 공간(z)에서 $\dfrac{\mathrm{d}(log_{10}σ)}{\mathrm{d}z}$를 자동미분으로 계산해, 절댓값 평균과 표준편차로 평균 민감도(±분산) 를 막대그래프로 시각화한다. 
 
 표준화 좌표 민감도는 모델이 “스케일링을 걷어낸 공정 비교”에서 어떤 변수를 더 의존하는지 보여준다. 
 
-다음으로 스케일러의 분산을 되돌려 $\dfrac{\mathrm{d}log_{10}σ}{\mathrm{d}x}$(원단위)로 환산하고, 더 나아가 체인룰을 통해 응력 단위 민감도 $\dfrac{\mathrm{d}σ}{\mathrm{d}x}$ $(Pa per unit)$ 를 구해, 설계 변수의 1 단위 변화가 절대 응력에 미치는 영향을 직관적으로 확인한다. 
+다음으로 스케일러의 분산을 되돌려 $\dfrac{\mathrm{d}(log_{10}σ)}{\mathrm{d}x}$(원단위)로 환산하고, 더 나아가 체인룰을 통해 응력 단위 민감도 $\dfrac{\mathrm{d}σ}{\mathrm{d}x}$ $(Pa per unit)$ 를 구해, 설계 변수의 1 단위 변화가 절대 응력에 미치는 영향을 직관적으로 확인한다. 
 
 마지막으로 $\dfrac{σ}{x} \cdot \dfrac{\mathrm{d}σ}{\mathrm{d}x}$ 를 사용해 탄력도 $\left| \dfrac{\mathrm{d}log_{10}σ}{\mathrm{d}log_{10}x} \right|$ 를 산출한다. 
 
@@ -210,7 +210,6 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해(grad 계산 �
 그런 다음 rainflow(series, $\epsilon$)가 ASTM 스타일로 반주기(0.5)와 전주기(1.0)를 세어 (range, mean, count) 배열을 만든다. 
 
 핵심 함수 miner_from_strain_eN($\sigma_{series}$, $T_{in, series}$, $const-params$, $\epsilon_0$, $b$, rf_eps, $\epsilon_e$)는 서로게이트 예측 응력 $\sigma(t)$와 온도 $T_{in}(t)$로부터 온도의존 탄성계수 $E(T)=E_{25}\exp\(-\beta\(T-25))$를 계산해 변형률 $\dfrac{\sigma}{E(T)}$를 만든 뒤, 레인플로우로 얻은 진폭 $\epsilon_a에 대해 고무용 $ε–N$ 관계 $N_f=(\dfrac{\epsilon_0}{\epsilon_a})^b$를 적용한다. 
-
 
 
 
