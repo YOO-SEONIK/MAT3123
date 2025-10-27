@@ -175,7 +175,7 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해(grad 계산 �
 
 마지막으로 $\dfrac{σ}{x} \cdot \dfrac{\mathrm{d}σ}{\mathrm{d}x}$ 를 사용해 탄력도 $|∂logσ/∂logx|$ 를 산출한다. 
 
-\left| \dfrac{\mathrm{d}log_{10}σ}{\mathrm{d}log_{10}x} \right|
+$\left| \dfrac{\mathrm{d}log_{10}σ}{\mathrm{d}log_{10}x} \right|$
 
  $|\dfrac{\mathrm{d}log_{10}σ}{\mathrm{d}log_{10}x}|$ 를 산출한다, 탄력도는 “x가 %만큼 변하면 $σ$가 몇 % 반응하는가”를 나타내므로 단위와 스케일에 무관한 비교가 가능하다. 
 
