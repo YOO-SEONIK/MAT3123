@@ -210,7 +210,7 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해 각 epoch마�
  를 구한다. 
 
 
-$\frac{\partial \log_{10}\sigma}{\partial \log_{10} x} = \frac{x}{\sigma}\,\frac{\partial \sigma}{\partial x}$
+$\left|\frac{\partial \log_{10}\sigma}{\partial \log_{10} x}\right| = \left|\frac{x}{\sigma}\frac{\partial \sigma}{\partial x}\right|$
 
 
 
