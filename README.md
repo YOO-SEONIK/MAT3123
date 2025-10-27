@@ -17,7 +17,7 @@ Python, Numpy, Pandas의 버전을 확인하고 그래프를 설정값을 조절
 
 ## 2. 내부 대류 열전달 계수 h
 이 단계에서는 관 내 유동의 내부 대류 열전달계수 $h$를 계산해 이후 온도장 및 응력 해석의 경계조건으로 사용한다. 
-먼저 $20\text{–}80~^\circ\mathrm{C}$ 범위에서 물의 평균 물성치(열전도도 $k$, 점도 $\mu$, 밀도 $\rho$, 비열 $c_p$, Prandtl 수 $\mathrm{Pr}$)를 정의한다. 
+  먼저 $20\text{–}80~^\circ\mathrm{C}$ 범위에서 물의 평균 물성치(열전도도 $k$, 점도 $\mu$, 밀도 $\rho$, 비열 $c_p$, Prandtl 수 $\mathrm{Pr}$)를 정의한다. 
 유속 $U$와 관내경 $D_i$로 Reynolds 수를 $\mathrm{Re}=\dfrac{{\rho}UD_i}{\mu}$ 로 계산하고, 유동 상태를 판별한다. 
 층류 $(\mathrm{Re}<2300)$ 에서는 완전발달 내부유동 가정으로 $\mathrm{Nu}=3.66$ 을 사용한다. 
 난류 $(\mathrm{Re}\ge 2300)$ 에서는 Dittus–Boelter 상관식 $\mathrm{Nu}=0.023,\mathrm{Re}^{0.8}\mathrm{Pr}^{,n}$ 을 쓰며, 가열은 $n=0.4$, 냉각은 $n=0.3$ 을 사용한다. 
