@@ -197,18 +197,17 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해 각 epoch마�
 
 샘플 여러 개(예: $n=256$)를 무작위로 뽑아 각 피처별 절댓값 평균 및 표준편차를 계산하고, 막대그래프로 시각화하면 모델이 어떤 변수에 더 의존하는지를 직관적으로 확인할 수 있다.
 
-다음으로 표준화 좌표를 원래 입력 단위로 되돌려 $\dfrac{\partial(log_{10}σ)}{\partialx} = \dfrac{1}{std(x)} \cdot \dfrac{\partial(log_{10}σ)}{\partial z}$ 를 얻는다.
+다음으로 표준화 좌표를 원래 입력 단위로 되돌려 $\dfrac{\partial(log_{10}σ)}{\partial x} = \dfrac{1}{std(x)} \cdot \dfrac{\partial(log_{10}σ)}{\partial z}$ 를 얻는다.
+
+이는 실제 물리 단위의 입력 변화가 로그 응력에 미치는 민감도를 의미한다.
+
+또한 체인룰을 통해 응력 자체의 절대 민감도 $\dfrac{\partial σ}{\partial x} = (ln 10)\sigma \cdot \dfrac{\partial(log_{10}σ)}{\partial x}$ 를 계산하면, 각 설계변수가 1 단위 증가할 때 응력(단위: Pa) 가 얼마나 변하는지를 직접적으로 알 수 있으며, 이 값이 크면 그 변수의 변화가 실제 응력 수준에 큰 영향을 준다는 뜻이다.
 
 
+$(Pa per unit)$
 
 
-
-
-
-
-표준화 좌표 민감도는 모델이 “스케일링을 걷어낸 공정 비교”에서 어떤 변수를 더 의존하는지 보여준다. 
-
-다음으로 스케일러의 분산을 되돌려 $\dfrac{\mathrm{d}(log_{10}σ)}{\mathrm{d}x}$(원단위)로 환산하고, 더 나아가 체인룰을 통해 응력 단위 민감도 $\dfrac{\mathrm{d}σ}{\mathrm{d}x}$ $(Pa per unit)$ 를 구해, 설계 변수의 1 단위 변화가 절대 응력에 미치는 영향을 직관적으로 확인한다. 
+더 나아가 체인룰을 통해 응력 단위 민감도 $\dfrac{\mathrm{d}σ}{\mathrm{d}x}$ $(Pa per unit)$ 를 구해, 설계 변수의 1 단위 변화가 절대 응력에 미치는 영향을 직관적으로 확인한다. 
 
 마지막으로 $\dfrac{σ}{x} \cdot \dfrac{\mathrm{d}σ}{\mathrm{d}x}$ 를 사용해 탄력도 $\left| \dfrac{\mathrm{d}log_{10}σ}{\mathrm{d}log_{10}x} \right|$ 를 산출한다. 
 
