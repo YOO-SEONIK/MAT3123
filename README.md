@@ -15,6 +15,8 @@ Final 프로젝트의 목표는 속이 빈 고무 패킹의 열–기계 거동�
 ## 1. 노트북 환경 체크 + 그래프 기본 설정
 Python, Numpy, Pandas의 버전을 확인하고 그래프의 설정값을 조절한다.
 
+<img width="201" height="61" alt="image" src="https://github.com/user-attachments/assets/67fb54dc-04cb-4a12-b26b-d4bf22aa68a5" />
+
 ## 2. 내부 대류 열전달 계수 h
 이 단계에서는 관 내 유동의 내부 대류 열전달계수 $h$를 계산해 이후 온도장 및 응력 해석의 경계조건으로 사용한다. 
 
