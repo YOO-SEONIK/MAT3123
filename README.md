@@ -197,10 +197,9 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해 각 epoch마�
 
 샘플 여러 개(예: $n=256$)를 무작위로 뽑아 각 피처별 절댓값 평균 및 표준편차를 계산하고, 막대그래프로 시각화하면 모델이 어떤 변수에 더 의존하는지를 직관적으로 확인할 수 있다.
 
-다음으로 표준화 좌표를 원래 입력 단위로 되돌려 $\dfrac{\mathrm{d}(log_{10}σ)}{\mathrm{d}x} = $\dfrac{1}{std(x)}$$
+다음으로 표준화 좌표를 원래 입력 단위로 되돌려 $\dfrac{\partial(log_{10}σ)}{\partialx} = \dfrac{1}{std(x)} \cdot \dfrac{\partial(log_{10}σ)}{\partial z}$ 를 얻는다.
 
 
-$\dfrac{\mathrm{d}(log_{10}σ)}{\mathrm{d}x}$
 
 
 
