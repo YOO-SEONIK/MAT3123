@@ -259,7 +259,7 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해 각 epoch마�
 
 먼저 const-params 딕셔너리의 고정 조건들($U$, $T_{amb}$, $E_{25}$, $β$, $α$, $h_o$)을 모든 시점에 복제하고, 시간에 따라 변하는 항목만 $T_{in}(t)$로 채워 입력 행렬 X를 만든다. 
 
-그런 다음 학습 때 fit한 동일한 StandardScaler로 X를 변환하고, 모델을 eval + no_grad 모드로 추론해 $y_log = log_{10}(\hat{\sigma})$를 얻는다. 
+그런 다음 학습 때 fit한 동일한 StandardScaler로 X를 변환하고, 모델을 eval + no_grad 모드로 추론해 $y_{log} = log_{10}(\hat{\sigma})$를 얻는다. 
 
 예측이 훈련 분포 밖으로 튈 때 수치 불안정이나 비현실적인 외삽을 줄이기 위해, 학습 타깃의 0.5 ~ 99.5% 범위를 기준으로 $tanh$ 기반 soft clamp를 적용한 뒤 $10^{y_{soft}}$ 로 $\sigma(t)$를 복원한다.
 이는 하드 클리핑 없이 연속적으로 범위를 완만히 눌러 주는 안정화 장치다.
