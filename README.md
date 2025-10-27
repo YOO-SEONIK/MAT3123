@@ -209,7 +209,7 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해(grad 계산 �
 
 그런 다음 rainflow(series, $\epsilon$)가 ASTM 스타일로 반주기(0.5)와 전주기(1.0)를 세어 (range, mean, count) 배열을 만든다. 
 
-핵심 함수 miner_from_strain_eN($\sigma_series$, $T_{in, series}$, const_params, $\epsilon_0$, $b$, rf_eps, eps_e)는 서로게이트 예측 응력 $\sigma(t)$와 온도 $T_{in}(t)$로부터 온도의존 탄성계수 $E(T)=E_{25}\exp\(-\beta\(T-25))$를 계산해 변형률 $\dfrac{\sigma}{E(T)}$를 만든 뒤, 레인플로우로 얻은 진폭 $\epsilon_a에 대해 고무용 $ε–N$ 관계 $N_f=(\dfrac{\epsilon_0}{\epsilon_a})^b$를 적용한다. 
+핵심 함수 miner_from_strain_eN($\sigma_{series}$, $T_{in, series}$, $const-params$, $\epsilon_0$, $b$, rf_eps, $\epsilon_e$)는 서로게이트 예측 응력 $\sigma(t)$와 온도 $T_{in}(t)$로부터 온도의존 탄성계수 $E(T)=E_{25}\exp\(-\beta\(T-25))$를 계산해 변형률 $\dfrac{\sigma}{E(T)}$를 만든 뒤, 레인플로우로 얻은 진폭 $\epsilon_a에 대해 고무용 $ε–N$ 관계 $N_f=(\dfrac{\epsilon_0}{\epsilon_a})^b$를 적용한다. 
 
 
 
@@ -223,7 +223,13 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해(grad 계산 �
 ## 14. 시간 시나리오 → 서로게이트로 σ(t) 예측
 이 함수는 시간에 따라 변하는 inlet temperature $T_{in}(t)$ 시퀀스를 받아, 10단계에서 학습한 MLP surrogate로 각 시점의 최대 등가응력 $\sigma(t)$를 예측한다. 
 
-먼저 const_params 딕셔너리의 고정 조건들($U$, $T_{in}$, $T_{amb}$, $E_{25}$, $β$, $α$, $h_o$)을 모든 시점에 복제하고, 시간에 따라 변하는 항목만 $T_{in}(t)$로 채워 입력 행렬 X를 만든다. 그런 다음 10단계에서 fit한 입력 스케일러로 X를 변환하고, 모델을 eval + no_grad 모드로 추론해 $y_log = log_{10}(\hat{\sigma})$를 얻는다. 예측이 훈련 분포 밖으로 튈 때 수치 에러 나 비현실적 외삽을 줄이기 위해, 학습 타깃의 0.5 ~ 99.5% 범위를 기준으로 tanh 기반 soft clamp를 적용한 뒤 10**y_soft 로 sigma(t)를 복원한다. 반환값은 길이가 $len(T_in)$인 1D numpy 배열이며, 15~16단계에서 rainflow -> e-N -> Miner 손상 및 수명 계산에 바로 사용된다.
+먼저 const_params 딕셔너리의 고정 조건들($U$, $T_{in}$, $T_{amb}$, $E_{25}$, $β$, $α$, $h_o$)을 모든 시점에 복제하고, 시간에 따라 변하는 항목만 $T_{in}(t)$로 채워 입력 행렬 X를 만든다. 
+
+그런 다음 10단계에서 fit한 입력 스케일러로 X를 변환하고, 모델을 eval + no_grad 모드로 추론해 $y_log = log_{10}(\hat{\sigma})$를 얻는다. 
+
+예측이 훈련 분포 밖으로 튈 때 수치 에러 나 비현실적 외삽을 줄이기 위해, 학습 타깃의 0.5 ~ 99.5% 범위를 기준으로 tanh 기반 soft clamp를 적용한 뒤 10**y_soft 로 sigma(t)를 복원한다. 
+
+반환값은 길이가 $len(T_in)$인 1D numpy 배열이며, 이후 단계에서 rainflow -> $\epsilon-N$ -> Miner 손상 및 수명 계산에 바로 사용된다.
 
 ## 15. 변형률 진단: 시나리오 생성 → sigma(t) 예측 → eps(t) 분석(통계/플롯)
 
