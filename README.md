@@ -82,6 +82,17 @@ label_one_sample은 다음 순서로 동작한다:
 
 이 산출물은 이후 scikit-learn/PyTorch에 그대로 투입할 수 있는 깔끔한 입력-타깃 테이블이며, 학습/검증 분할, 스케일링, 라벨 균형 점검 등의 후속 단계와 연결된다.
 
+<img width="842" height="210" alt="image" src="https://github.com/user-attachments/assets/2661d44f-8a70-4816-b1bc-b4d6a7563db8" />
+
+<img width="748" height="154" alt="image" src="https://github.com/user-attachments/assets/fec761b5-7bf0-462b-adc8-78f6b51c9e9a" />
+
+<img width="642" height="473" alt="image" src="https://github.com/user-attachments/assets/7a026772-0b46-4ea6-bfb0-cc4238d05688" />
+
+<img width="687" height="473" alt="image" src="https://github.com/user-attachments/assets/11a3cae1-4726-4d06-a6bb-d8dd3e673711" />
+
+<img width="671" height="217" alt="image" src="https://github.com/user-attachments/assets/9379c00c-b23a-4a1c-83cd-c9577114a931" />
+
+
 # Machine Learning
 
 ## 6. CSV 로드 → 피처/타깃 지정 → 라벨 불균형 점검(보조 라벨) → 학습/테스트 분할
