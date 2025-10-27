@@ -191,11 +191,7 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해 각 epoch마�
 ## 11. MLP 민감도/탄력도 진단(입력→예측 영향 분석)
 이 단계는 학습된 MLP가 예측하는 로그응력 $y=log_{10}σ$에 대해 각 입력 피처가 모델 출력에 얼마나 민감하게 작용하는지 국소 기울기($gradient$) 로 정량화한다. 
 
-먼저 표준화된 입력 공간(z)에서
-
-$\dfrac{\partial(log_{10}σ)}{\partial z}$
-
-를 자동미분으로 계산한다.
+먼저 표준화된 입력 공간(z)에서 $\dfrac{\partial(log_{10}σ)}{\partial z}$를 자동미분으로 계산한다.
 
 여기서 $z$는 표준화된 입력이므로, 이 미분은 스케일 영향을 제거한 상대적 민감도를 나타낸다.
 
@@ -205,15 +201,11 @@ $\dfrac{\partial(log_{10}σ)}{\partial z}$
 
 이는 실제 물리 단위의 입력 변화가 로그 응력에 미치는 민감도를 의미한다.
 
-또한 체인룰을 통해 응력 자체의 절대 민감도 
-
-$\dfrac{\partial σ}{\partial x} = (ln 10)\sigma \cdot \dfrac{\partial(log_{10}σ)}{\partial x}$ 
-
-를 계산하면, 각 설계변수가 1 단위 증가할 때 응력(단위: Pa) 가 얼마나 변하는지를 직접적으로 알 수 있으며, 이 값이 크면 그 변수의 변화가 실제 응력 수준에 큰 영향을 준다는 뜻이다.
+또한 체인룰을 통해 응력 자체의 절대 민감도 $\dfrac{\partial σ}{\partial x} = (ln 10)\sigma \cdot \dfrac{\partial(log_{10}σ)}{\partial x}$ 를 계산하면, 각 설계변수가 1 단위 증가할 때 응력(단위: Pa) 가 얼마나 변하는지를 직접적으로 알 수 있으며, 이 값이 크면 그 변수의 변화가 실제 응력 수준에 큰 영향을 준다는 뜻이다.
 
 마지막으로, 단위에 무관한 비교를 위해 탄력도(elasticity)
 
- $ \left| \dfrac{\partial log_{10}σ}{\partial log_{10}x} \right| = \left| \dfrac{σ}{x} \ cdot \dfrac{\partial σ}{\partial x} \right|$ 
+ $ \left| \dfrac{\partial log_{10}σ}{\partial log_{10}x} \right| = \left| \dfrac{σ}{x} \cdot \dfrac{\partial σ}{\partial x} \right|$ 
  
  를 구한다. 
 
