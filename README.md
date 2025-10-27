@@ -108,7 +108,10 @@ label_one_sample은 다음 순서로 동작한다:
 
 stratify 옵션은 학습/테스트 양쪽에 동일한 클래스 비율을 보장해, 불균형에 따른 평가 편차를 줄인다. 
 
-결과적으로 이 단계는 회귀와 분류 모두에 대해 일관된 입력/타깃 정의, 불균형 방지 장치, 재현 가능한 분할(random_state=42)을 한 번에 수행하여 이후 모델 학습과 교차검증이 신뢰성 있게 진행되도록 기반을 마련한다
+결과적으로 이 단계는 회귀와 분류 모두에 대해 일관된 입력/타깃 정의, 불균형 방지 장치, 재현 가능한 분할(random_state=42)을 한 번에 수행하여 이후 모델 학습과 교차검증이 신뢰성 있게 진행되도록 기반을 마련한다.
+
+<img width="301" height="47" alt="image" src="https://github.com/user-attachments/assets/d8b02d98-eee2-471e-8c18-0a6fb2db4e61" />
+
 
 ## 7. 회귀 베이스라인 학습/평가
 이 단계는 max_vm(회귀 타깃)을 예측하기 위한 기본 회귀 모델들을 한 번에 학습하고 비교한다. 
@@ -129,6 +132,9 @@ GridSearchCV 객체의 경우 .fit()이 끝나면 내부적으로 최적 하이�
 
 최종적으로 모델명, RMSE, R², best_params를 DataFrame(reg_results)에 모아 한눈에 비교할 수 있도록 정리하며, 이 표는 이후 단계에서 최고 성능 회귀 모델 선 및 정합(Parity) 플롯 생성의 근거 자료가 된다.
 
+<img width="907" height="63" alt="image" src="https://github.com/user-attachments/assets/4d8e282b-2a90-4ac9-bc7d-6888daf6a384" />
+
+
 ## 8. 분류 베이스라인 학습/튜닝/평가
 이 단계는 허용응력 기준의 합격/불합격 레이블을 예측하는 기본 분류기를 한 번에 학습하고 비교한다. 
 
@@ -148,6 +154,9 @@ ROC-AUC는 가능하면 predict_proba의 양성(1) 확률을, 없으면 decision
 
 트리/포레스트는 feature_importances_로 입력 변수 영향도를 간단히 확인할 수 있고, 로지스틱은 계수 부호로 해석 가능해 원인 분석에 유용하다.
 
+<img width="912" height="377" alt="image" src="https://github.com/user-attachments/assets/e7e9fb40-4e53-47ae-9a75-3de17f17ef41" />
+
+
 ## 9. 랜덤포레스트 중요도 시각화 및 회귀 정합 플롯
 이 단계는 모델이 어떤 입력 변수에 주로 의존해 예측하는지, 그리고 예측이 실제 값과 얼마나 일치하는지를 시각적으로 진단한다.
 
@@ -165,11 +174,17 @@ ROC-AUC는 가능하면 predict_proba의 양성(1) 확률을, 없으면 decision
 
 이 플롯은 RMSE/R² 같은 단일 수치가 놓치기 쉬운 오류 패턴(언더/오버 예측 영역, 극값 왜곡)을 시각적으로 드러내며, 후속으로 모델 교체(예: 더 깊은 트리, 비선형 회귀), 입력 스케일 조정, 이상치 제거 또는 데이터 재가중 등 개선 방향을 정하는 데 유용한 시각적 진단 도구로 활용된다.
 
+<img width="584" height="344" alt="image" src="https://github.com/user-attachments/assets/e96c2722-870f-4edc-9197-5a950d463fc3" />
+
+<img width="584" height="344" alt="image" src="https://github.com/user-attachments/assets/f7ad147d-6f5e-4ebd-84b4-12735b977eae" />
+
+<img width="464" height="464" alt="image" src="https://github.com/user-attachments/assets/f4d4e426-24ad-4806-95c9-9fd37362f2e0" />
+
+
 # PyTorch Surrogate Training
 
 ## 10. MLP 서로게이트(수동 SGD) 학습/평가
 이 단계는 PyTorch로 간단한 MLP(2×128 ReLU)구조를 학습해 물리 라벨 max_vm(최대 등가응력)을 빠르게 예측하는 서로게이트를 만든다. 
-
 
 먼저 입력 변수는 StandardScaler로 표준화(평균 $0$, 분산 $1$) 하고, 타깃은 $\log_{10}$ 변환으로 스케일안정화해 극값의 영향을 완화한다.
 
@@ -198,6 +213,13 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해 각 epoch마�
 결과적으로 이 파이프라인은 입력 표준화 + 타깃 로그변환 + 수동 SGD + 조기 종료로 구성된
 가볍고 안정적인 학습 루프이며, 로그공간 MSE → 원공간 RMSE로 연결되는 평가 절차를 통해
 모델의 수렴과 물리적 정합성을 동시에 검증할 수 있다.
+
+<img width="396" height="275" alt="image" src="https://github.com/user-attachments/assets/574d984b-ba14-40bf-9f6f-bf00e11c0b95" />
+
+<img width="584" height="344" alt="image" src="https://github.com/user-attachments/assets/0803682a-f020-410f-9c76-347686b0eb8d" />
+
+<img width="468" height="464" alt="image" src="https://github.com/user-attachments/assets/9fdcaff1-6a66-44c5-9353-2efa8a240106" />
+
 
 # Sensitivity Analysis
 
@@ -228,6 +250,13 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해 각 epoch마�
 
 단, 이는 선형 근사(국소) 이므로 입력이 큰 변화나 학습 분포 밖에서는 민감도 해석을 보수적으로 적용해야 한다.
 
+<img width="692" height="368" alt="image" src="https://github.com/user-attachments/assets/e047d317-3d17-4270-937a-c30ce0708922" />
+
+<img width="704" height="368" alt="image" src="https://github.com/user-attachments/assets/cb6aab51-e3d8-421a-9a5a-1dde837b63b4" />
+
+<img width="686" height="368" alt="image" src="https://github.com/user-attachments/assets/088333c3-ec90-4337-817c-c845691b8ec8" />
+
+
 ## 12. 유한차분(FD) vs 자동미분(grad) 일치성 점검
 이 단계는 사용한 민감도/탄력도 계산이 정확하고 스케일 변환과 일관되는지 검증하기위해 자동미분($gradient$)으로 얻은 탄력도와 유한차분($FD$)으로 근사한 탄력도를 비교 분석한다.
 
@@ -244,6 +273,9 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해 각 epoch마�
 만약 큰 오차가 보이면 (a) 표준화 스케일 적용 위치/축 오류, (b) 로그 기반 체인룰의 계수 누락, (c) 표준화/원단위 혼용, (d) 너무 큰 $ε$로 인한 비선형 영향 등을 점검해야 한다. 
 
 이 검증 과정을 통과하면 앞선 민감도및 탄력도 분석에서 제시한 변수 중요도 결과가 수학적/구현적으로 일관됨을 보장하며, 이후 제어 변수 우선순위 선정및 센서 정밀도 평가 같은 민감도 응용 해석의 신뢰도를 확보할 수 있다.
+
+<img width="381" height="147" alt="image" src="https://github.com/user-attachments/assets/fad0ddf6-28ed-45ca-923b-f06075c91fc4" />
+
 # Thermal-stress Simulation and Fatigue Assessment
 
 ## 13. 피로 해석 기반 함수: 레인플로우, ε–N 수명, 온도 시나리오
@@ -301,6 +333,14 @@ torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해 각 epoch마�
 
 결과적으로 해당 단계는 온도–응력–변형률의 시간적 연계, 사이클 분포 통계, 피로한계 후보 도출을 한 번에 수행하는 정량적 변형률 진단 루틴으로, 이후 피로 수명 해석의 입력 조건을 현실적으로 보정하는 데 사용된다.
 
+<img width="700" height="111" alt="image" src="https://github.com/user-attachments/assets/cc0ffc99-1e31-4e6f-928b-2385f6693b9e" />
+
+<img width="704" height="464" alt="image" src="https://github.com/user-attachments/assets/9a3af7d3-d8a0-4f3a-9271-744829a35ea2" />
+
+<img width="704" height="464" alt="image" src="https://github.com/user-attachments/assets/4d9d7dc8-b974-4d63-a0b4-f814760ae583" />
+
+<img width="703" height="464" alt="image" src="https://github.com/user-attachments/assets/3d085652-9694-4e54-b23e-3fde684cc9da" />
+
 # Life Prediction
 
 ## 16. ε–N 수명 계산 함수: sigma(t) → ε(t) → 레인플로우 → Miner 손상 → 수명[h]
@@ -326,4 +366,8 @@ $Miner$ 합산식 $D=\Sigma \dfrac{count}{N_f}$으로 누적 손상을 구하고
 출력 로그는 (1) $\sigma_N$의 분포 요약(min, max, std), (2)기록 길이 record_hours, (3) 손상 $D$와 수명 life_hours를 보여준다. 
 
 $D$ 약 1이 설계 한계, life_hours는 record_hours를 $D$로 나눈 결과이며, $ε_e$를 높이면 미세 사이클이 무시되어 수명이 길어지고, 반대로 낮추면 더 보수적인 결과가 나온다.
+
+<img width="318" height="67" alt="image" src="https://github.com/user-attachments/assets/4841da15-bccb-4497-8be3-c96839b7e208" />
+
+<img width="698" height="46" alt="image" src="https://github.com/user-attachments/assets/2a882089-b43b-472a-aa4c-dfaa67f1278d" />
 
