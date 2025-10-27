@@ -3,6 +3,9 @@ MAT3123-Final Project
 
 Final 프로젝트의 목표는 속이 빈 고무 패킹의 열–기계 거동을 물리식으로 라벨링해 합성 데이터셋을 만들고, 이를 학습한 MLP서로게이트로 온도 변동 시나리오에서 응력 기반 $ε-N$ 피로수명을 빠르게 예측한다.
 
+<img width="277" height="273" alt="image" src="https://github.com/user-attachments/assets/fad3d487-e3ae-4f06-bfe0-bf240ead570f" />
+
+
 1. Data Setting (1~5)
 2. Machine Learning (6~9)
 3. PyTorch Surrogate Training (10)
