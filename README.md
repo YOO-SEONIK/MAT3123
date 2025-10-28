@@ -469,3 +469,7 @@ floor 모드는 $p_{pass}(t) < τ_{lo}$만 제외한다(기본 $τ_{lo} = 0.5τ^
 단, 본 스윕의 절대 수명 값은 서로게이트 정확도, $E(T)$ 모델, $ε−N$ 파라미터, $ε_e$에 민감하므로 상대 비교(조건 간 우열·감도) 중심으로 읽고, 중요 영역은 별도 정밀 시뮬레이션·실측 보정으로 확인하는 것이 바람직하다. 
 
 결과적으로 이 단계는 (운전 레벨 × 교란 세기) 전역을 가로지르는 수명–손상–리스크 지도를 제공해, 안전 운전 윈도우 선정, 인터록 조건, 냉각/유량 여유 설계 같은 의사결정의 정량적 근거를 한 번에 마련한다.
+
+<img width="495" height="538" alt="image" src="https://github.com/user-attachments/assets/007d9faa-2464-45ab-89e5-69b04bf9ec28" />
+
+<img width="696" height="512" alt="image" src="https://github.com/user-attachments/assets/8fc52945-3ec9-4cc0-9ce3-5d8c1f8dbc2e" />
