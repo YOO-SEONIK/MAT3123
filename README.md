@@ -301,29 +301,17 @@ REG["clf_results"]: 모델별 ACC/F1/AUC/최적 파라미터 표, REG["best_clf"
 
 동시에 같은 샘플에 대해 자동미분으로 $\dfrac{\partial (log_{10}σ)}{\partial z}$를 구해 스케일러의 표준편차를 반영하여 $\dfrac{\partial(log_{10}σ)}{\partial x} = \dfrac{1}{std(x)} \cdot \dfrac{\partial(log_{10}σ)}{\partial z}$ 로 변환한다.
 
-해당 값을 이용해 로그–로그 탄력도를 이론적으로 계산하면, $\dfrac{\partial (log_{10}σ}{\partial (log_{10}x} = (ln 10)x \cdot \dfrac{\partial(log_{10}σ)}{\partial x}$
+해당 값을 이용해 로그–로그 탄력도를 이론적으로 계산하면, $\dfrac{\partial log_{10}σ}{\partial log_{10}x} = (ln 10)x \cdot \dfrac{\partial(log_{10}σ)}{\partial x}$ 이 되어 자동미분 기반의 탄력도가 완성된다.
 
+각 피처별로 FD 기반 탄력도의 평균(FD_mean)과 Grad 기반 탄력도의 평균(Grad_mean), 그리고 두 값의 절대오차(abs.err)와 상대오차(rel.err%)를 계산하여 나란히 출력한다.
 
+상대오차가 전체적으로 수 % 이내로 유지되면, 자동미분 경로, 스케일러 역변환, 로그계수(ln 10) 처리, 체인룰 적용이 모두 올바르게 구현되었음을 의미한다.
 
+반대로 오차가 크다면 표준화 스케일 적용 위치나 축 방향 오류, 로그변환 시 계수 누락, 표준화/원단위 혼용, $\varepsilon$이 너무 커서 비선형 항이 반영된 경우등을 점검해야 한다.
 
+해당 검증을 통과하면 수행한 민감도 및 탄력도 해석이 수학적 일관성과 수치적 정확성을 모두 만족하고, 이후 제어 변수 우선순위 설정, 설계 변수 영향 분석, 센서 정밀도 검증 등 민감도 응용 해석에서 결과의 신뢰도를 보장할 수 있다.
 
-($gradient$) 기반의 탄력도 $\dfrac{\partial σ}{\partial x} = (ln 10)\sigma \cdot \dfrac{\partial(log_{10}σ)}{\partial x}$를 구한다.
-
-
-
-
-
-
-
-마지막으로 각 피처별로 두 탄력도의 평균을 나란히 출력하여 비교한다.
-
-하나는 수치근사(FD), 하나는 자동미분(grad)에 기반한 것으로, 두 값이 거의 일치하면(절대차가 매우 작거나 상대오차가 수% 이내) 자동미분 경로, 스케일러 역변환, 로그계수($ln10$) 처리, 체인룰 적용이 모두 올바르게 구현된 것이다.
-
-만약 큰 오차가 보이면 (a) 표준화 스케일 적용 위치/축 오류, (b) 로그 기반 체인룰의 계수 누락, (c) 표준화/원단위 혼용, (d) 너무 큰 $ε$로 인한 비선형 영향 등을 점검해야 한다. 
-
-이 검증 과정을 통과하면 앞선 민감도및 탄력도 분석에서 제시한 변수 중요도 결과가 수학적/구현적으로 일관됨을 보장하며, 이후 제어 변수 우선순위 선정및 센서 정밀도 평가 같은 민감도 응용 해석의 신뢰도를 확보할 수 있다.
-
-<img width="381" height="147" alt="image" src="https://github.com/user-attachments/assets/fad0ddf6-28ed-45ca-923b-f06075c91fc4" />
+<img width="531" height="241" alt="image" src="https://github.com/user-attachments/assets/0f0b8c71-c342-4660-9109-b0d3216af294" />
 
 # Thermal-stress Simulation and Fatigue Assessment
 
