@@ -290,17 +290,37 @@ REG["clf_results"]: 모델별 ACC/F1/AUC/최적 파라미터 표, REG["best_clf"
 
 <img width="704" height="368" alt="image" src="https://github.com/user-attachments/assets/25ac5f6e-fa50-4c9c-a5cc-d4da5fe18cfa" />
 
-
-
-
-
-
-
-
 ## 12. 유한차분(FD) vs 자동미분(grad) 일치성 점검
-이 단계는 사용한 민감도/탄력도 계산이 정확하고 스케일 변환과 일관되는지 검증하기위해 자동미분($gradient$)으로 얻은 탄력도와 유한차분($FD$)으로 근사한 탄력도를 비교 분석한다.
 
-(1) 표준화된 학습 입력 Xtr 중 일부 샘플을 무작위로 선택하고  → (2) 이를 원단위로 되돌린 $X0(orig)$ 주변에서 각 피처를 +1%만큼 곱해 작은 교란을 준다($ε=0.01$) → (3) 모델 출력 $y=log_{10}(σ)$의 변화를 이용해 유한차분 탄력도 $Elasticity_{fd} = \dfrac{Δlog_{10}σ}{Δlog_{10}x} \approx \dfrac{y_1 - y_0}{log_{10}(1+\epsilon)}$ 를 계산한다. 이는 입력을 1%로 변화시켰을 때 로그응력이 얼마나 변하는지를 근사적으로 표현한다.
+이 단계는 앞선 MLP 민감도/탄력도 계산이 정확하고 스케일 변환과 일관되는지 검증하기위해, 자동미분(gradient)으로 계산한 탄력도와 유한차분(Finite Difference, FD)로 근사한 탄력도를 비교 분석한다.
+
+
+
+
+
+
+
+먼저 학습 입력(X_train)에서 무작위로 일부 샘플($n=64$)을 선택하고, 이를 표준화→역변환하여 원단위 입력 $X_{0}$을 얻는다. 각 입력 피처 $x_j$에 대해 ±0.1%의 미세한 곱셈 변화를 주어 ₩x_j^{(+)} = x_j(1+\varepsilon), \qquad
+x_j^{(-)} = x_j(1-\varepsilon^{-1}）₩
+
+
+
+
+
+(1) 표준화된 학습 입력 Xtr 중 일부 샘플을 무작위로 선택하고  → (2) 이를 원단위로 되돌린 $X0(orig)$ 주변에서 각 피처를 +1%만큼 곱해 작은 교란을 준다($ε=0.01$)
+
+
+
+
+
+
+
+
+
+
+
+
+ → (3) 모델 출력 $y=log_{10}(σ)$의 변화를 이용해 유한차분 탄력도 $Elasticity_{fd} = \dfrac{Δlog_{10}σ}{Δlog_{10}x} \approx \dfrac{y_1 - y_0}{log_{10}(1+\epsilon)}$ 를 계산한다. 이는 입력을 1%로 변화시켰을 때 로그응력이 얼마나 변하는지를 근사적으로 표현한다.
 
 동시에 같은 샘플에 대해 자동미분으로 $\dfrac{\partial (log_{10}σ)}{\partial z}$를 구해 스케일러 분산을 반영하여 $\dfrac{\partial(log_{10}σ)}{\partial x} = \dfrac{1}{std(x)} \cdot \dfrac{\partial(log_{10}σ)}{\partial z}$ 로 환산한다.
 
