@@ -364,7 +364,7 @@ $p_{pass}(t) = clip(p_{pass}(t), 10^{-6}, 1-10^{-6})$
 ## 15. 변형률 진단: 시나리오 생성 → σ(t)·p_pass(t) → ε(t) 분석(통계/플롯)
 이 단계는 실제 운전 중 온도·유량 변동을 모사한 시간 시나리오에서, 서로게이트로 예측한 응력 시계열$σ(t)$과 분류 확률 $p_{pass}(t)$를 함께 계산하고, 온도 의존 탄성률로 변형률 $ε(t)$을 구한 뒤 레인플로우 진폭 분포까지 요약및 시각화한다.
 
-먼저 scenario_noise로 2s간격, 총 6h길이의 유입 온도 시나리오 $T_{in}(t)$를 생성한다​(평균온도 70, 변동폭 20, 1차 지연 스무딩 12s) 이때 기록 시간 record_hours_N는  $\dfrac{len(t_N)\cdot DT_S}{3600.0}$ 으로 환산한다.
+먼저 scenario_noise로 2s간격, 총 6h길이의 유입 온도 시나리오 $T_{in}(t)$를 생성한다​(평균온도 $80 ^\circ\mathrm{C}$, 변동폭 $±20 ^\circ\mathrm{C}, 1차 지연 스무딩 12s) 이때 기록 시간 record_hours_N는  $\dfrac{len(t_N)\cdot DT_S}{3600.0}$ 으로 환산한다.
 
 그다음 run_scenario_and_risk()로 회귀·분류를 동시 수행하여 $σ(t)$, $p_{pass}(t)$, risk_mask, risk_rate를 얻는다. 코드에서는 USE_RICH_SCENARIO=True일 때 입력에 동조 변동을 부여한다. 이로써 순수 온도 변동뿐 아니라 유량·외부대류 계수의 저주파 흔들림이 응력·합격확률에 미치는 영향을 함께 확인할 수 있다.
 
@@ -378,69 +378,15 @@ $p_{pass}(t) = clip(p_{pass}(t), 10^{-6}, 1-10^{-6})$
 	​
 결과적으로 본 단계는 (시나리오) $T_{in}(t)$, $U(t)$, $h_o(t)$ → (예측) $σ(t)$, $p_{pass}(t)$ → 변환 → $ε(t)$ → (주기분석) $ε_a$의 흐름을 통해, 시간영역 응답·리스크·사이클 진폭 분포를 한 번에 점검하는 정량적 변형률 진단 루틴을 제공한다. 이 요약과 플롯들은 이후 피로 한계 설정(진폭 컷), Miner 손상 누적, 수명 추정의 실무 기준값을 잡는 데 직접 활용된다.
 
+<img width="491" height="71" alt="image" src="https://github.com/user-attachments/assets/c9ded42a-7920-4da5-9fc2-fcb914ca78cc" />
 
+<img width="704" height="380" alt="image" src="https://github.com/user-attachments/assets/e2900bd5-eab7-4306-8f9b-4a6e40092c63" />
 
-	​
+<img width="704" height="380" alt="image" src="https://github.com/user-attachments/assets/42e7b1fd-153d-4a80-b712-9123479604f2" />
 
-=range/2 및 가중치(완전주기=1.0, 반주기=0.5)를 사용한다. 이번 간결판에서는 진폭 히스토그램만 제시하며, 상단 구간 낭비를 줄이기 위해 x축 상한을 
-min
-⁡
-(
-0.08
-,
- 
-max
-⁡
-𝜀
-𝑎
-[
-%
-]
-)
-min(0.08, maxε
-a
-	​
+<img width="704" height="380" alt="image" src="https://github.com/user-attachments/assets/643824fc-5e14-4716-813d-ae8721263d5a" />
 
-[%])로 제한하고, 세밀한 분포 확인을 위해 bin=1000을 사용한다.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-이 단계는 실제 운전 중의 온도 변동이 있을 때, 고무 링에 발생하는 변형률 거동을 정량적으로 진단하는 과정이다.
-
-먼저 scenario_noise로 2초 간격, 총 6시간짜리 유입 온도 시나리오 $T_{in}(t)$ 시나리오를 만들고(평균 $80 ^\circ\mathrm{C}$, $±5 ^\circ\mathrm{C}$, 시간상수 $60s$), 이전 단계에서 학습한 MLP 서로게이트로 각 시점의 등가응력 $\sigma(t)$를 예측한다. 
-
-기록 길이 record_hours_N는  $\dfrac{len(t_N)\cdot DT_S}{3600.0}$ 로 계산해 시간 단위로 환산하고, 이후 수명 외삽의 기준으로 사용한다. 
-
-다음으로 온도의존 탄성계수 $E(T)=E_{25}\exp\(-\beta\(T-25))$를 이용해 각 시점의 변형률 $ε(t) = \dfrac{\sigma}{E(T)}$를 계산하고, 이를 %단위로 환산해 시간 변화에 따른 응력-변형률 응답을 얻는다.
-
-계산된 변형률 시계열을 rainflow 알고리즘에 입력해 사이클별 진폭 $ε_a$ 와 카운트(0.5 또는 1.0)을 구한 뒤, 진폭 분포의 요약 통(min, median, max, p1, p05, p10, p90, p95)를 산출해 변형률의 전체 분포 폭과 지배 진폭 수준을 수치로 확인한다.
-
-특히 피로한계 후보 $ε_e$를 바로 잡을 수 있도록 (1) conservative(하위 10% 커트 - 보수적 컷), (2) typical(중앙값의 50% - 대표적 운전 조건), (3) loose(중앙값의 25%- 느슨한 기준)로 세 가지 대표값을 함께 제시하고 이후 $Miner$ 피로 손상 계산 시 진폭 컷오프 설정의 참고치로 활용된다.
-
-마지막으로 (1) 온도 시나리오 플롯 - 시간에 따른 $T_{in}(t)$ 변동, (2) 변형률 시계열 플롯 -시간에 따른 $ε(t)$ [%] 변화, (3)rainflow 진폭 히스토그램 - 진폭 분포 $ε_a$ [%] (가중치=사이클 수) 의 세가지 플롯을 제공해 전체 경향을 직관적으로 확인한다.    
-
-히스토그램 x축은 실제 데이터 상단 구간 낭비를 줄이기 위해 0 ~ $min(0.04, max(ε_a))$로 제한하고, 미세한 분포를 보려 $bins$를 1000개로 설정한다.
-
-결과적으로 해당 단계는 온도–응력–변형률의 시간적 연계, 사이클 분포 통계, 피로한계 후보 도출을 한 번에 수행하는 정량적 변형률 진단 루틴으로, 이후 피로 수명 해석의 입력 조건을 현실적으로 보정하는 데 사용된다.
-
-<img width="700" height="111" alt="image" src="https://github.com/user-attachments/assets/cc0ffc99-1e31-4e6f-928b-2385f6693b9e" />
-
-<img width="704" height="464" alt="image" src="https://github.com/user-attachments/assets/e4b9e279-57a7-4a88-a71d-437e17ffa6d1" />
-
-<img width="704" height="464" alt="image" src="https://github.com/user-attachments/assets/4d9d7dc8-b974-4d63-a0b4-f814760ae583" />
-
-<img width="703" height="464" alt="image" src="https://github.com/user-attachments/assets/3d085652-9694-4e54-b23e-3fde684cc9da" />
+<img width="704" height="416" alt="image" src="https://github.com/user-attachments/assets/9ed88cf8-35d8-47e5-a089-03f46d3e3242" />
 
 # Life Prediction
 
@@ -448,25 +394,39 @@ a
 
 이 단계는 시간축 $t$와 온도 $T_{in}(t)$, 서로게이트가 예측한 응력 $\sigma(t)$ , 재료 상수($E_{25}$, $\beta$)를 받아 $ε–N$ 모델로 누적손상 $D$와 예상 수명 life_hours를 계산한다. 
 
-먼저 온도의존 탄성계수 $E(T)=E_{25}\exp\(-\beta\(T-25))$로 순간 변형률 시계열 $ε(t) = \dfrac{\sigma(t)}{E(T_{in}(t))}$로 만든다.
+구현은 간결성과 수치 안정성을 중시해 경계 상황 처리(빈 시계열·불규칙 샘플링·극소 진폭 등)를 포함한다.
 
-그다음으로 변형률 파형을 rainflow에 넣어 사이클별 진폭 $ε_a$와 개수 $count$를 얻고, 진폭을 $ε_a = \dfrac{range}{2}$로 정의한 후, 피로한계 $ε_e$이상만 선택하여 고무용 $ε–N$ 관계 $N_f=(\dfrac{ε_0}{ε_a})^b$로 각 사이클의 허용 반복수를 계산한다.
+먼저 불규칙 샘플링에 대응하기 위해 $Δt$를 중앙값 간격으로 추정하고, record_hours = $\dfrac{t_{max}-t_{min}+mdeian(\Delta t)}{3600.0}$
 
-$Miner$ 합산식 $D=\Sigma \dfrac{count}{N_f}$으로 누적 손상을 구하고, 기록 길이를 record_hours = $\dfrac{t_{end}-t_{start}+\Delta t}{3600.0}$ 로 환산하여 예상수명을 life_hours = $\dfrac{record-hours}{max(D, ε)}$ 로 계산한다(분모 0 방지를 위해 작은 하한 사용)
+온도의존 탄성계수 $E(T)=E_{25}\exp\(-\beta\(T-25))$로 순간 변형률 시계열 $ε(t) = \dfrac{\sigma(t)}{E(T_{in}(t))}$로 만든다. 이때 수치 안정성을 위해 하한 $10^{3}$Pa를 적용한다.
 
-반환값은 life_hours, $D$ ,record_hours, rf, $ε(t)$, $ε_a$, $count$ 로 수명 및 손상과 함께 중간 결과(레인플로우 결과/변형률 시계열·진폭/사이클 수)까지 돌려주어 파라미터 $ε_0$, $b$, $ε_e$ 튜닝과 결과 해석에 바로 활용할 수 있다.
+$ε(t)$를 레인플로우에 입력해 (range,mean,count)를 얻고, 진폭을 $ε_a = \dfrac{range}{2}$ 가중치 count를 0.5에서 1.0에서 취한다. rf_eps(노이즈 컷)를 통해 미세 진동을 걸러낼 수 있다. 사이클이 없으면 $D=0$, 수명 $∞$를 반환한다.
+
+고무용 $ε–N$ 관계 $N_f=(\dfrac{ε_0}{ε_a})^b$를 적용하고 수치안정을 위해 $ε_a ≥ {10}^{-12}, N_f ≥ {10}^{-18}$ 로 바닥값을 둔다. Miner 합산은 $D=\Sigma \dfrac{count}{N_f}$으로 누적 손상을 구한다.
+
+최종적으로 life_hours = $\dfrac{record-hours}{D}$ 로 예상수명은 반환한다.
+
+반환값은 (life_hours, D, record_hours, rf_table, eps_t, eps_a, cnt)로, 최종 수명·손상과 함께 중간 산출물(레인플로우 표, $ε(t)$, $ε_a$, count)을 제공해 $ε_0$ , $b$, $ε_e$ 튜닝 및 결과 해석에 바로 활용할 수 있다.
+
 
 ## 17. ε–N 기반 손상/수명 계산(요약 실행)
 
-이 단계는 앞에서 준비한 시나리오($t_N$, $T_{in,N}$, $const_N$), 서로게이트 응력 시계열 $\sigma_N(t)$ , 그리고 이전에 정의한 함수 compute_life_eN_from_sigma에 넣어 누적손상 $D$와 예상 수명 life_hours를 한 번에 산출한다. 
+이 단계는 앞에서 준비한 시나리오($t_N$, $T_{in,N}$, $const_N$), 서로게이트 응력 시계열 $\sigma_N(t)$를 이전에 정의한 수명 계산 함수 compute_life_eN_from_sigma에 넣어 누적손상 $D$와 예상 수명 life_hours를 한 번에 산출한다. 
 
 입력 파라미터(피로 특성) $ε_0$(기준 변형률), $b$(지수), $ε_e$ (피로한계 진폭)은 고무 피로 특성 및 수명에 직접적인 영향이 크므로 설계 가정에 따라 맞게 설정해야한다.
 
-함수 내부에서는 $E(T)$로부터 변형률 $ε(t)$을 만들고, rainflow로 사이클 진폭 $ε_a$ 및 $count$를 계산한 뒤, $ε–N$ 관계 $N_f=(\dfrac{ε_0}{ε_a})^b$와 $Miner$ 합산으로 $D$를 계산한다. 
+함수 내부에서는 $E(T)$로부터 변형률 $ε(t)$을 만들고, rainflow로 사이클 진폭 $ε_a$ 및 $count$를 계산한 뒤, 피로 한계 $ε_e$ 이상만 유효 사이클로 선택해 $ε–N$ 관계 $N_f=(\dfrac{ε_0}{ε_a})^b$와 $Miner$ 합산으로 $D$를 계산한다. 그 후, record_hours를 D로 나누어 life_hours를 계산한다.
 
 출력 로그는 (1) $\sigma_N$의 분포 요약(min, max, std), (2)기록 길이 record_hours, (3) 손상 $D$와 수명 life_hours를 보여준다. 
 
-$D$ 약 1이 설계 한계, life_hours는 record_hours를 $D$로 나눈 결과이며, $ε_e$를 높이면 미세 사이클이 무시되어 수명이 길어지고, 반대로 낮추면 더 보수적인 결과가 나온다.
+$D$ 약 1이 설계 한계이고, $ε_e$를 높이면 미세 사이클이 무시되어 수명이 길어지고, 반대로 낮추면 더 보수적인 결과가 나온다.
+
+또한 분류 기반 리스크 메타(risk rate, 최소$p_{pass}$)를 함께 출력하여, 성능(응력/수명)과 운영 리스크를 동시에 파악할 수 있게 하고, 계산 결과는 REG에 저장되어 후속 단계에서 사용된다.
+
+
+
+
+
 
 <img width="318" height="67" alt="image" src="https://github.com/user-attachments/assets/4841da15-bccb-4497-8be3-c96839b7e208" />
 
