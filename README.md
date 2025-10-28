@@ -301,7 +301,7 @@ REG["clf_results"]: 모델별 ACC/F1/AUC/최적 파라미터 표, REG["best_clf"
 
 동시에 같은 샘플에 대해 자동미분으로 $\dfrac{\partial (log_{10}σ)}{\partial z}$를 구해 스케일러의 표준편차를 반영하여 $\dfrac{\partial(log_{10}σ)}{\partial x} = \dfrac{1}{std(x)} \cdot \dfrac{\partial(log_{10}σ)}{\partial z}$ 로 변환한다.
 
-해당 값을 이용해 
+해당 값을 이용해 로그–로그 탄력도를 이론적으로 계산하면, $\dfrac{\partial (log_{10}σ}{\partial (log_{10}x} = (ln 10)x \cdot \dfrac{\partial(log_{10}σ)}{\partial x}$
 
 
 
