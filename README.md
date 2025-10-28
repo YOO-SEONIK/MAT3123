@@ -38,7 +38,6 @@ Python, Numpy, Pandas의 버전을 확인하고 그래프의 설정값을 조절
 
 해당 근사는 원형 관, 매끈한 벽, 충분히 긴 관, 상수 물성 등의 단순화를 포함하므로, 고온/점도 변화가 큰 경우나 비원형 덕트, 입구영향이 큰 짧은 관에서는 보정 또는 다른 상관식 검토가 필요하다.
 
-
 ## 3. 고무 링의 온도 분포 T(r)
 이 단계는 속 빈 원통(고무 링)의 반지름 방향 정상상태 온도분포 $T(r)$를 구한다. 
 
@@ -98,7 +97,6 @@ label_one_sample은 다음 순서로 동작한다:
 
 <img width="671" height="217" alt="image" src="https://github.com/user-attachments/assets/9379c00c-b23a-4a1c-83cd-c9577114a931" />
 
-
 # Machine Learning
 
 ## 6. CSV → 라벨 점검/백업 → 학습/테스트 분할 → 스케일러 저장
@@ -153,7 +151,6 @@ REG에는 baseline_rmse, reg_results, baseline_models_dict 등이 함께 기록�
 
 <img width="916" height="93" alt="image" src="https://github.com/user-attachments/assets/5e976b14-f16e-4d35-8004-985a2bddb930" />
 
-
 ## 8. 분류 베이스라인 학습/튜닝/평가 및 임계값(τ*)
 이 단계는 합격/불합격(pass/fail) 분류를 위한 기본 분류기들을 한 번에 학습·튜닝·평가하고, 운영 목적에 맞는 예측 확률 임계값(τ*)을 기반으로 확정한다.
 
@@ -181,9 +178,7 @@ REG["clf_results"]: 모델별 ACC/F1/AUC/최적 파라미터 표, REG["best_clf"
 
 결과적으로 이 단계는 튜닝된 분류기 간 성능 비교 → 최고 모델 선정 → 운영 목적(재현율 보장 등)에 맞춘 임계값 확정까지 일괄 수행하여, 실제 적용 시 오탐/미탐 트레이드오프를 요구 조건에 맞게 제어할 수 있도록 준비한다.
 
-
 <img width="1126" height="447" alt="image" src="https://github.com/user-attachments/assets/1cbc710c-eb3f-413c-bb47-d1051c385ece" />
-
 
 ## 9. 랜덤포레스트 중요도 시각화 및 회귀 정합 플롯
 
@@ -215,46 +210,45 @@ REG["clf_results"]: 모델별 ACC/F1/AUC/최적 파라미터 표, REG["best_clf"
 
 <img width="488" height="488" alt="image" src="https://github.com/user-attachments/assets/9b3d906a-f316-41fc-9d23-e76fc7b88e2b" />
 
-
 # PyTorch Surrogate Training
 
 ## 10. MLP 서로게이트(수동 SGD) 학습/평가
-이 단계는 PyTorch로 간단한 MLP(2×128 ReLU)구조를 학습해 물리 라벨 max_vm(최대 등가응력)을 빠르게 예측하는 서로게이트를 만든다. 
+
+이 단계는 PyTorch로 간단한 MLP(2×128 ReLU)구조를 학습해 물리 라벨 max_vm(최대 등가응력)을 빠르게 예측하는 서로게이트 모델(surrogate model)를 만든다.
 
 먼저 입력 변수는 StandardScaler로 표준화(평균 $0$, 분산 $1$) 하고, 타깃은 $\log_{10}$ 변환으로 스케일안정화해 극값의 영향을 완화한다.
 
-이 변환은 MSE 손실 계산 시 큰 값의 오차가 과도하게 반영되는 문제를 줄이고, 신경망의 수렴 안정성을 높인다.
+이 로그 변환은 매우 큰 응력값으로 인한 손실 오류를 방지하고, MSE 손실 계산 시 큰 값의 오차가 과도하게 반영되는 것을 완화하여 수렴 안정성을 높인다.
 
-torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해 각 epoch마다 loss.backward()로 기울기를 계산하고, 모든 파라미터에 대해 L2 weight를 더해 적용한 뒤 갱신한다.
+학습 구조는 torch.optim을 쓰지 않고 순수 SGD 스텝을 직접 구현해 각 epoch마다 loss.backward()로 기울기를 계산하고, 모든 파라미터에 대해 L2 weight를 더해 적용한 뒤 갱신한다.
 
-이 과정을 통해 라이브러리 의존성을 최소화하면서도 SGD 기반의 정상적인 학습 과정을 재현한다.
+이 방식은 라이브러리 의존성을 최소화하면서도 SGD의 동작 원리와 L2 효과 구현하여 학습 메커니즘을 재현한다.
 
-학습은 미니배치(Mini-batch)방식으로 수행되며, 손실함수는 MSE(로그공간) 이다.
+학습은 mini-batch(batch_size=64) 방식으로 수행되며, 손실함수는 로그공간의 MSE이다.
 
 또한 검증 손실(val_mse)을 모니터링하며 조기 종료(patience=80) 를 적용해 과적합을 방지한다.
 
-매 epoch마다 train/val 손실을 기록하여 학습 곡선을 그리고, 검증 손실이 최소일 때의 가중치를 best_state로 저장해 복원한다.
+학습 과정에서 매 epoch의 훈련/검증 손실을 모두 기록하여 학습곡선(train_hist, val_hist)을 그리고, 검증 손실이 최소였던 시점의 파라미터를 best_state로 저장한 뒤 최종 복원한다.
 
-학습이 완료되면, 예측값 $log_{10}\hat{y}$을 원공간으로 되돌려 $y=10^{log_{10}\hat{y}}$로 변환하고, 테스트셋에서의 RMSE(단위: Pa) 를 계산해 최종 성능을 보고한다.
+학습 완료 후 예측값 $\hat{y}{log} = \log{10}(\hat{y})$를 원공간으로 역변환($\hat{y} = 10^{\hat{y}_{log}}$)하여 실제 단위[Pa]의 응력 예측값을 얻고, 테스트 세트에 대해 RMSE(단위: Pa)를 계산한다.
 
-이와 함께 Parity plot(정답 vs 예측) 을 통해 예측값이 실제값과 얼마나 일치하는지를 시각적으로 확인한다.
+또한 예측값과 실제값을 비교하는 정합 플롯을 작성해 모델의 일관성과 예측 경향을 시각적으로 확인한다.
 
-점들이 대각선(y=x) 근처에 밀집할수록 전반 정합이 양호하며, 곡률·꼬리 쏠림이 있으면 비선형 미모델링 또는 외삽 영역의 오차 가능성을 의미한다.
+점들이 대각선(y=x) 근처에 고르게 분포하면 모델이 전 영역에서 잘 일반화된 것이며, 곡률, 꼬리 쏠림, 극값 영역의 편차가 크다면 비선형성 미모델링·외삽 오차·데이터 스케일 불일치 가능성을 시사한다.
 
-이 MLP 서로게이트는 이후 시간 기반 피로 분석 단계에서 $σ(t)$를 반복적으로 예측해야 하는 핵심 가속기로 사용된다.
+마지막으로 MLP의 테스트 RMSE를 이전 단계의 베이스라인 RMSE와 비교해 더 우수하면 REG["best_reg"]를 MLP로 갱신하고, 그렇지 않으면 기존 베이스라인 모델을 유지한다.
 
-성능이 부족할 경우 은닉 크기 확대, 층 추가, 학습률 조정, 드롭아웃/배치정규화 추가, 더 긴 학습 혹은 데이터 확장 등을 통해 개선할 수 있다.
+모델, RMSE, 로그변환 여부(inv_target="log10") 등의 메타데이터를 함께 REG에 저장해 이후 시나리오 단계에서 직접 재활용할 수 있도록 한다.
 
-결과적으로 이 파이프라인은 입력 표준화 + 타깃 로그변환 + 수동 SGD + 조기 종료로 구성된
-가볍고 안정적인 학습 루프이며, 로그공간 MSE → 원공간 RMSE로 연결되는 평가 절차를 통해
-모델의 수렴과 물리적 정합성을 동시에 검증할 수 있다.
+결과적으로 본 단계는 입력 표준화 → 로그 타깃 변환 → 수동 SGD + L2 → 조기 종료 → 원공간 RMSE 평가의 일련 절차를 통해, 단순하지만 안정적인 학습 루프를 구현하고 모델의 수렴과 물리적 정합성을 동시에 검증하는 파이프라인을 완성한다.
 
-<img width="396" height="275" alt="image" src="https://github.com/user-attachments/assets/574d984b-ba14-40bf-9f6f-bf00e11c0b95" />
+이 MLP 서로게이트는 이후 단계에서 반복적 응력 예측이나 피로 해석 등 고빈도 예측 연산의 가속기(core regressor)로 활용된다.
 
-<img width="584" height="344" alt="image" src="https://github.com/user-attachments/assets/0803682a-f020-410f-9c76-347686b0eb8d" />
+<img width="390" height="276" alt="image" src="https://github.com/user-attachments/assets/a9f35394-72c6-4533-9ec8-69123f500544" />
 
-<img width="468" height="464" alt="image" src="https://github.com/user-attachments/assets/9fdcaff1-6a66-44c5-9353-2efa8a240106" />
+<img width="584" height="344" alt="image" src="https://github.com/user-attachments/assets/1ad44b92-0da6-41d2-958b-456789a94243" />
 
+<img width="464" height="464" alt="image" src="https://github.com/user-attachments/assets/71f74636-a33f-4be9-966f-d132286a6194" />
 
 # Sensitivity Analysis
 
