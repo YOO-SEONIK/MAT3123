@@ -343,8 +343,29 @@ scenario_noise(...)는 온도 시나리오 생성기로, 주어진 평균 온도
 
 이변환은 하드 클리핑 대신 완만한 포화 함수 형태의 $tanh$를 사용하여 외삽 영역에서도 연속적이고 안정적인 복원을 보장한다.
 
-$z = \dfrac{y_{log}-mid}{0.5span}, y_{soft} = mid + tanh(z)(0.5span - 10^{-3}) , \hat{\sigma} = 10^{y{soft}}$, 여기서 $mid = \dfrac{Y_{min}+Y_{max}}{2}, span = Y_{min} - Y_{max}$ 이다.
+$z = \dfrac{y_{log}-mid}{0.5span}, y_{soft} = mid + tanh(z)(0.5span - 10^{-3}) , \hat{\sigma} = 10^{y{soft}}$, 여기서 $mid = \dfrac{Y_{min}+Y_{max}}{2}, span = Y_{max} - Y_{min}$ 이다.
 
+run_scenario_and_risk(make_xt_fn, T_points) 함수는 시간 배열 $T_points$에 대해 사용자가 정의한 입력 생성기 make_xt_fn(t)을 호출하여, 각 시점별 입력 벡터 ($U$, $T_{in}$, $T_{amb}$, $E_{25}$, $β$, $α$, $h_o$)를 구성한다. 
+
+회귀기가 PyTorch MLP인 경우, 학습 시 사용한 StandardScaler로 표준화한 후 no_grad 모드에서 $\hat{y}{log} = \log{10}(\hat{\sigma})$ 를 계산하며, sklearn 기반 모델은 .predict(X) 결과를 그대로 사용한다. 타깃이 로그 스케일(REG["inv_target"] == "log10")로 학습된 경우 위 식을 이용해 소프트 역변환을 수행한다.
+
+분류기(best_clf)는 동일한 입력$X$ 에 대해 양성 클래스(1)의 확률 $p_{pass}(t)$를 계산한다. 
+
+predict_proba를 지원하지 않을 경우 decision_function 결과를 시그모이드 변환하여 확률을 추정하며,
+수치적 안정성을 위해 다음과 같이 확률 범위를 제한한다.
+
+$p_{pass}(t) = clip(p_{pass}(t), 10^{-6}, 1-10^{-6})$
+8단계에서 확정된 임계값 $\tau^{*}$ 에 대해, 다음 조건을 만족하는 시점을 위험 상태로 간주한다.
+
+
+$\mathrm{risk\_mask}(t)=\begin{cases}1, & \text{if } p_{\mathrm{pass}}(t)<\tau^{*},\\[2pt]
+0, & \text{otherwise.}\end{cases}$
+
+
+
+
+$\mathrm{risk\_rate}
+=\frac{1}{T}\sum_{t}\,\mathbf{1}\!\left\{\,p_{\mathrm{pass}}(t)<\tau^{*}\,\right\}$
 
 
 
