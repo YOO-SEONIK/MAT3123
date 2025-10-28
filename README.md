@@ -343,7 +343,7 @@ scenario_noise(...)는 온도 시나리오 생성기로, 주어진 평균 온도
 
 이변환은 하드 클리핑 대신 완만한 포화 함수 형태의 $tanh$를 사용하여 외삽 영역에서도 연속적이고 안정적인 복원을 보장한다.
 
-$z = \dfrac{y_{log}-mid}{0.5span}, y_{soft} = mid + tanh(z)(0.5span - 10^{-3}, \hat{\sigma} = 10^{y{soft}})$, 여기서 $mid = \dfrac{Y_{min}+Y_{max}}{2},  span = Y_{min} - Y_{max} $ 이다.
+$z = \dfrac{y_{log}-mid}{0.5span}, y_{soft} = mid + tanh(z)(0.5span - 10^{-3}) , \hat{\sigma} = 10^{y{soft}}$, 여기서 $mid = \dfrac{Y_{min}+Y_{max}}{2}, span = Y_{min} - Y_{max}$ 이다.
 
 
 
