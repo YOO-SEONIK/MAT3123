@@ -159,18 +159,11 @@ REG에는 baseline_rmse, reg_results, baseline_models_dict 등이 함께 기록�
 
 먼저 모든 모델은 동일한 교차검증 설정(KFold(n_splits=5, shuffle=True, random_state=42))으로 공정 비교한다. 평가 기본 분할은 이전 단계에서 확정된 X_train/X_test, y_c_train/y_c_test를 사용한다.
 
-모델/그리드 구성
+모델은 세가지를 사용하며 LogReg: StandardScaler → LogisticRegression(max_iter=200, solver="lbfgs") 파이프라인, 파라미터는 C ∈ {0.1, 1, 5, 10}, class_weight ∈ {None, "balanced"}를 GridSearchCV로 탐색한다.
 
-LogReg: StandardScaler → LogisticRegression(max_iter=200, solver="lbfgs") 파이프라인.
-하이퍼파라미터는 C ∈ {0.1, 1, 5, 10}, class_weight ∈ {None, "balanced"}를 GridSearchCV로 탐색한다.
-
-DT(DecisionTree): max_depth ∈ {None, 4, 6, 10}, min_samples_leaf ∈ {1, 3, 5}, class_weight ∈ {None, "balanced"}를 탐색한다.
-
-RF(RandomForest): n_estimators ∈ {200, 400}, max_depth ∈ {None, 8, 12}, min_samples_leaf ∈ {1, 3}, class_weight ∈ {None, "balanced"}를 탐색한다.
+DT(DecisionTree): max_depth ∈ {None, 4, 6, 10}, min_samples_leaf ∈ {1, 3, 5}, class_weight ∈ {None, "balanced"}를 탐색하고, F(RandomForest): n_estimators ∈ {200, 400}, max_depth ∈ {None, 8, 12}, min_samples_leaf ∈ {1, 3}, class_weight ∈ {None, "balanced"}를 탐색한다.
 
 GridSearchCV의 기본 scoring을 따르므로 내부 CV 선택 기준은 정확도(ACC) 이다. 탐색이 끝나면 각 모델은 해당 최적 파라미터로 전체 훈련 세트에 재학습된다.
-
-학습·평가 및 로깅
 
 테스트 세트에서 ACC, 불균형에 강한 F1, 확률 기반 판별력 ROC-AUC를 기록한다.
 
@@ -178,61 +171,18 @@ GridSearchCV의 기본 scoring을 따르므로 내부 CV 선택 기준은 정확
 
 결과는 [model, acc, f1, auc, best_params]로 clf_results 표에 정리하고, F1 → AUC 우선 정렬로 최고 모델을 고른다.
 
-최고 모델에 대해 혼동행렬과 classification_report를 출력해 오탐/미탐 구조를 해석한다(실제 0과 1 각각의 맞춤/오분류 개수).
+최고 모델에 대해 혼동행렬과 classification_report를 출력해 오탐/미탐 구조를 해석한다(실제 0과 1 각각의 맞춤/오분류 개수)
 
-임계값(τ*) 정책 확정
+최고 모델의 테스트 확률로부터 precision_recall_curve를 계산하고, 두 과정 중 하나로 τ*를 정한다.
 
-최고 모델의 테스트 확률로부터 precision_recall_curve를 계산하고, 두 정책 중 하나로 τ*를 정한다.
+POLICY="max_f1": F1이 최대가 되는 임계값을 선택하거나 POLICY="recall_at": 목표 재현율(TARGET_REC, 기본 0.98) 이상을 만족하는 구간 중 F1이 최대인 임계값을 선택(만족 구간이 없으면 max_f1로 폴백)하여 최종 τ*와 채택 방법을 REG["tau_star"], REG["tau_policy"]에 저장한다.
 
-POLICY="max_f1": F1이 최대가 되는 임계값을 선택.
-
-POLICY="recall_at": 목표 재현율(TARGET_REC, 기본 0.98) 이상을 만족하는 구간 중 F1이 최대인 임계값을 선택(만족 구간이 없으면 max_f1로 폴백).
-
-최종 τ*와 채택 정책은 REG["tau_star"], REG["tau_policy"]에 저장한다.
-
-REG 저장 항목
-
-REG["clf_results"]: 모델별 ACC/F1/AUC/최적 하이퍼파라미터 표(후속 리포트에 재사용)
-
-REG["best_clf"]: 최고 분류기(그리드 최적 추정기)
-
-REG["tau_star"], REG["tau_policy"]: 확정 임계값과 정책
+REG["clf_results"]: 모델별 ACC/F1/AUC/최적 파라미터 표, REG["best_clf"]: 최고 분류기(그리드 최적 추정기), REG["tau_star"], REG["tau_policy"]: 확정 임계값과 방법을 추출한다.
 
 결과적으로 이 단계는 튜닝된 분류기 간 성능 비교 → 최고 모델 선정 → 운영 목적(재현율 보장 등)에 맞춘 임계값 확정까지 일괄 수행하여, 실제 적용 시 오탐/미탐 트레이드오프를 요구 조건에 맞게 제어할 수 있도록 준비한다.
 
 
-<img width="1129" height="446" alt="image" src="https://github.com/user-attachments/assets/b73a5aae-f1f9-4d65-b819-e4376b0f5c04" />
-
-
-
-
-
-
-
-
-
-
-
-
-이 단계는 허용응력 기준의 합격/불합격 레이블을 예측하는 기본 분류기를 한 번에 학습하고 비교한다. 
-
-각 모델은 공정 비교와 누설 방지를 위해 동일한 분할과 동일한 교차검증 설정(cv=KFold(5, shuffle=True, random_state=42))을 사용한다. 
-
-로지스틱 회귀(LogReg)는 StandardScaler → LogisticRegression 파이프라인으로 감싸 감싸 입력 스케일을 표준화하고 정규화 강도 C를 그리드로 탐색한다. 
-
-결정나무(DT)는 max_depth, min_samples_leaf를, 랜덤포레스트(RF)는 n_estimators, max_depth, min_samples_leaf를 그리드로 탐색한다. 
-
-모든 모델은 GridSearchCV로 하이퍼파라미터를 튜닝하며, scoring을 따로 지정하지 않았으므로 내부 CV의 선택 기준은 정확도(ACC)다. 즉, ACC를 최대화하는 설정이 고른 뒤, 그 최적 설정으로 전체 훈련 세트를 재학습하고 테스트셋을 예측한다.
-
-평가는 정확도(ACC), 불균형에 강한 F1, 확률 기반 판별력을 보는 ROC-AUC로 수행한다. 
-
-ROC-AUC는 가능하면 predict_proba의 양성(1) 확률을, 없으면 decision_function 출력을 사용하며, 후자는 단조성만 유지되면 되므로 0-1 min-max로 스케일해도 AUC 해석에 문제가 없다. 
-
-결과를 표로 정리한 뒤 F1 → AUC 우선 정렬로 최상 모델을 고르고, 혼동행렬과 classification_report로 오탐/미탐 구조를 구체적으로 해석한다(예: 실제 불합격 중 합격으로 본 개수 등). 운영 목적이 미검출 최소화라면, 선택한 모델의 확률 출력에 대해 임계값을 0.5에서 조정하여 Precision–Recall 트레이드오프를 맞추는 것을 권장한다. 
-
-트리/포레스트는 feature_importances_로 입력 변수 영향도를 간단히 확인할 수 있고, 로지스틱은 계수 부호로 해석 가능해 원인 분석에 유용하다.
-
-<img width="912" height="377" alt="image" src="https://github.com/user-attachments/assets/e7e9fb40-4e53-47ae-9a75-3de17f17ef41" />
+<img width="1126" height="447" alt="image" src="https://github.com/user-attachments/assets/1cbc710c-eb3f-413c-bb47-d1051c385ece" />
 
 
 ## 9. 랜덤포레스트 중요도 시각화 및 회귀 정합 플롯
