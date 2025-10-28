@@ -258,83 +258,43 @@ REG["clf_results"]: 모델별 ACC/F1/AUC/최적 파라미터 표, REG["best_clf"
 
 먼저 학습 데이터 중 무작위로 $n=256$개의 샘플을 추출하고, 이를 표준화된 입력 공간(z)에서 모델의 입력으로 설정한다. 이후 자동미분(autograd)을 통해 $\dfrac{\partial(log_{10}σ)}{\partial z}$ 를 계산한다.
 
-여기서 $z$는 표준화된 입력이므로, 이 미분은 스케일 차이를 제거한 상대적 민감도를 의미한다.
-
-
-
-------------작성중---------
-
-
-
-
-
-
-
-
+여기서 $z$는 표준화된 입력이므로, 이 미분은 스케일 차이를 제거한 상대적 민감도를 의미한다. 
 
 각 피처별 절댓값 평균과 표준편차를 계산하고, 막대그래프로 나타내면 모델이 어떤 변수에 더 강하게 반응하는지를 직관적으로 파악할 수 있다.
 
-
 다음으로, 표준화 좌표를 실제 입력 단위로 환산하여 $\dfrac{\partial(log_{10}σ)}{\partial x} = \dfrac{1}{std(x)} \cdot \dfrac{\partial(log_{10}σ)}{\partial z}$ 를 구한다.
+
 이는 입력 1 단위 변화가 로그 응력값에 미치는 영향을 의미하며, 물리적 단위로 해석할 수 있는 민감도다.
 
 이후 체인룰을 적용하면 응력 자체의 절대 민감도 $\dfrac{\partial σ}{\partial x} = (ln 10)\sigma \cdot \dfrac{\partial(log_{10}σ)}{\partial x}$ 를 계산할 수 있다.
+
 이 값은 각 설계변수가 1 단위 증가할 때 응력($\sigma$, 단위: Pa)이 얼마나 변하는지를 의미하며, 값이 클수록 실제 응력 수준에 미치는 영향이 크다는 것을 나타낸다.
 
-또한 입력 스케일이나 단위를 제거한 무차원 반응성 지표로 탄력도(elasticity) $\left|\frac{\partial \log_{10}\sigma}{\partial \log_{10} x}\right| = \left|\frac{x}{\sigma}\frac{\partial \sigma}{\partial x}\right|$를 계산한다.
-탄력도는 “입력 $x$가 일정 비율(% 단위)로 변할 때, 응력 $\sigma$가 몇 % 변하는가”를 나타내는 비율적 민감도로, 단위나 절댓값의 크기에 무관한 구조적 의존도를 보여준다.
-이 세 종류의 지표—표준화 민감도($|\partial(\log_{10}\sigma)/\partial z|$), 절대 민감도($|\partial\sigma/\partial x|$), 탄력도($|\partial\log\sigma/\partial\log x|$)—는 모두 무작위로 선택된 여러 샘플에서 **평균±표준편차(mean±std)**로 계산되어, 입력 변수별 국소 분산(불확실성)까지 함께 평가된다.
-결과적으로
+마지막으로 입력 스케일이나 단위를 제거한 무차원 반응성 지표로 탄력도(elasticity) $\left|\frac{\partial \log_{10}\sigma}{\partial \log_{10} x}\right| = \left|\frac{x}{\sigma}\frac{\partial \sigma}{\partial x}\right|$를 계산한다.
 
+탄력도는 “입력 $x$가 일정 비율(% 단위)로 변할 때, 응력 $\sigma$가 몇 % 변하는가”를 나타내는 비율적 민감도로 단위와 스케일에 무관한 모델의 구조적 민감도를 무차원 비율 형태로 보여준다.
 
-표준화 민감도는 모델 내부에서의 상대적 피처 영향도를,
+이 모든 지표(표준화 민감도, 절대 민감도, 탄력도)는 무작위로 뽑은 여러 샘플에서 평균±표준편차로 계산해 입력 변수별 국소 분산(불확실성)까지 함께 평가된다.
 
-
-절대 민감도는 실제 물리 단위(Pa) 기준의 응력 변화량을,
-
-
-탄력도는 단위와 스케일 차이를 제거한 퍼센트 반응성을
-각각 보여준다.
-
+결과적으로 표준화 민감도는 모델 내부에서의 상대적 피처 영향도를, 절대 민감도는 실제 물리 단위(Pa) 기준의 응력 변화량을, 탄력도는 단위와 스케일 차이를 제거한 퍼센트 반응성을 각각 보여준다.
 
 값이 큰 변수일수록 모델이 해당 입력 변화에 민감하게 반응하며, 실제 물리계에서도 중요한 제어 변수일 가능성이 높다.
+
 이는 향후 운전 제어 우선순위, 센서 정밀도 설정, 설계 변수 조정 방향을 정하는 근거로 활용할 수 있다.
+
 다만, 이 해석은 국소(linearized) 근사에 기반하므로, 입력이 크게 변하거나 학습 데이터의 분포를 벗어나는 영역에서는 결과를 보수적으로 해석해야 한다.
 
+<img width="692" height="368" alt="image" src="https://github.com/user-attachments/assets/1c987b48-f513-4daa-89f8-476cfac9ae3f" />
+
+<img width="704" height="368" alt="image" src="https://github.com/user-attachments/assets/4b35b951-7f2f-497b-8078-36fc09783b84" />
+
+<img width="704" height="368" alt="image" src="https://github.com/user-attachments/assets/25ac5f6e-fa50-4c9c-a5cc-d4da5fe18cfa" />
 
 
 
 
 
 
-
-
-
-샘플 여러 개(예: $n=256$)를 무작위로 뽑아 각 피처별 절댓값 평균 및 표준편차를 계산하고, 막대그래프로 시각화하면 모델이 어떤 변수에 더 의존하는지를 직관적으로 확인할 수 있다.
-
-다음으로 표준화 좌표를 원래 입력 단위로 되돌려 $\dfrac{\partial(log_{10}σ)}{\partial x} = \dfrac{1}{std(x)} \cdot \dfrac{\partial(log_{10}σ)}{\partial z}$ 를 얻는다.
-
-이는 실제 물리 단위의 입력 변화가 로그 응력에 미치는 민감도를 의미한다.
-
-또한 체인룰을 통해 응력 자체의 절대 민감도 $\dfrac{\partial σ}{\partial x} = (ln 10)\sigma \cdot \dfrac{\partial(log_{10}σ)}{\partial x}$ 를 계산하면, 각 설계변수가 1 단위 증가할 때 응력(단위: Pa) 가 얼마나 변하는지를 직접적으로 알 수 있으며, 이 값이 크면 그 변수의 변화가 실제 응력 수준에 큰 영향을 준다는 뜻이다.
-
-마지막으로, 단위에 무관한 비교를 위해 탄력도(elasticity) $\left|\frac{\partial \log_{10}\sigma}{\partial \log_{10} x}\right| = \left|\frac{x}{\sigma}\frac{\partial \sigma}{\partial x}\right|$ 를 구한다.
-
-탄력도는 “입력 x가 %만큼 변하면 응력 $σ$가 몇 % 변하는가”를 나타내므로 단위와 스케일에 무관한 모델의 구조적 민감도를 무차원 비율 형태로 보여준다.
-
-이 모든 지표(표준화 민감도, 절대 민감도, 탄력도)는 무작위로 뽑은 여러 샘플에서 평균±표준편차로 계산해 지역적 분산도 함께 평가한다.
-
-표준화 민감도는 모델 내부의 상대적 의존도를, 절대 민감도 $\dfrac{\partial σ}{\partial x}$는 입력 1 단위 변화가 절대 응력(Pa)에 미치는 물리적 영향을, 단위와 크기 차이를 제거한 비율 기반 반응성 (운전·제어 변수의 퍼센트 영향 비교)를 보여준다.
-
-값이 큰 입력은 모델과 물리 모두에서 중요한 조절 레버일 가능성이 높으며, 데이터 수집 정밀도(센서 정확도)와 운전 제어 우선순위를 정하는 근거가 된다. 
-
-단, 이는 선형 근사(국소) 이므로 입력이 큰 변화나 학습 분포 밖에서는 민감도 해석을 보수적으로 적용해야 한다.
-
-<img width="692" height="368" alt="image" src="https://github.com/user-attachments/assets/e047d317-3d17-4270-937a-c30ce0708922" />
-
-<img width="704" height="368" alt="image" src="https://github.com/user-attachments/assets/cb6aab51-e3d8-421a-9a5a-1dde837b63b4" />
-
-<img width="686" height="368" alt="image" src="https://github.com/user-attachments/assets/088333c3-ec90-4337-817c-c845691b8ec8" />
 
 
 ## 12. 유한차분(FD) vs 자동미분(grad) 일치성 점검
