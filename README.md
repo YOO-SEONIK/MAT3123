@@ -199,7 +199,7 @@ REG["clf_results"]: 모델별 ACC/F1/AUC/최적 파라미터 표, REG["best_clf"
 
 중요도가 높을수록 해당 피처가 모델의 의사결정에 크게 기여했음을 의미하며, 해당 결과는 설계 변수 조정의 우선순위를 정하거나, 데이터 수집·센서 배치의 중요도를 판단하는 근거가 된다.
 
-중요도 해석 시 불순도 기반 중요도는 상관 피처 간 분산(importance split)이나 카디널리티/스케일 효과의 영향을 받을 수 있다. 따라서 변수 영향의 정밀한 검증이 필요할 때는 이후 단계에서 Permutation Importance나 SHAP을 보조적으로 검토하는 것이 바람직하다.
+중요도 해석 시 해당 중요도는 불순도 기반 상대 지표로, 상관 피처 간 분산(importance split)이나 카디널리티/스케일 효과의 영향받아 가중이 분산될 수 있다. 따라서 변수 영향의 정밀한 검증이 필요할 때는 이후 단계에서 Permutation Importance나 SHAP을 보조적으로 검토하는 것이 바람직하다.
 
 마지막으로 7단계 결과표(REG["reg_results"])에서 RMSE 최우수 회귀 모델을 선택해 테스트셋에 대한 Parity 플롯을 그린다. x축은 실제값(True max_vm [Pa]), y축은 예측값(Pred max_vm [Pa])이며, 대각선(y=x)에 가까울수록 정합이 양호하다.
 
@@ -207,45 +207,13 @@ REG["clf_results"]: 모델별 ACC/F1/AUC/최적 파라미터 표, REG["best_clf"
 
 체계적인 곡률(언더/오버 예측), 꼬리 부근의 일방적 치우침, 극값에서의 확산 증가는 비선형성 미모델링, 외삽 구간 예측, 타깃/입력 스케일링 이슈, 이상치 영향 등을 의심할 단서가 된다.
 
-결과적으로 본 단계는 (회귀/분류) 변수 중요도 진단 → 베이스라인 회귀기의 정합 확인을 통해, 이후 단계에서의 모델 교체(더 깊은 트리/비선형 모델), 입력 특성 개선(스케일·파생피처), 데이터 전처리(이상치/가중치) 등 개선 방향을 구체화하는 근거를 제공한다.
+이 플롯은 RMSE나 R² 같은 단일 수치가 놓치기 쉬운 오류 패턴(언더/오버 예측 구간, 극값 왜곡 등)을 시각적으로 드러내며, 이를 통해 모델이 실제 데이터의 분포를 얼마나 충실히 학습했는지를 직관적으로 평가할 수 있다. 또한 이러한 시각적 진단은 이후 단계에서의 모델 교체(예: 더 깊은 트리, 비선형 회귀), 입력 특성 개선(스케일·파생피처 조정), 데이터 전처리(이상치 제거·가중 재조정) 등 구체적인 개선 방향을 설정하는 근거로 활용된다.
 
+<img width="584" height="344" alt="image" src="https://github.com/user-attachments/assets/d1632fce-3094-4112-b36b-b29b325817c8" />
 
+<img width="584" height="344" alt="image" src="https://github.com/user-attachments/assets/45a07b56-0d91-41d7-a7e6-c4da68465ebb" />
 
-
-
-
-단, 이 중요도는 불순도 기반 상대 지표이므로, 피처 간 상관성이나 스케일 차이에 따라 가중이 분산될 수 있다는 점을 염두에 두어야 한다.
-
-다음으로 회귀 결과표에서 선택된 모델(기본적으로 첫 번째 항목 예: RF-GS)을 사용해 테스트셋에서 예측값과 실제값을 산점도(Parity plot) 로 비교한다.
- 
-점들이 대각선(y=x) 부근에 모이면 정합이 좋고, 체계적인 곡률이나 꼬리 부분의 편차가 보이면 비선형성 미모델링, 데이터 범위 바깥 예측, 타깃 스케일 이슈 등을 의심할 수 있다. 
-
-이 플롯은 RMSE/R² 같은 단일 수치가 놓치기 쉬운 오류 패턴(언더/오버 예측 영역, 극값 왜곡)을 시각적으로 드러내며, 후속으로 모델 교체(예: 더 깊은 트리, 비선형 회귀), 입력 스케일 조정, 이상치 제거 또는 데이터 재가중 등 개선 방향을 정하는 데 유용한 시각적 진단 도구로 활용된다.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<img width="584" height="344" alt="image" src="https://github.com/user-attachments/assets/e96c2722-870f-4edc-9197-5a950d463fc3" />
-
-<img width="584" height="344" alt="image" src="https://github.com/user-attachments/assets/f7ad147d-6f5e-4ebd-84b4-12735b977eae" />
-
-<img width="464" height="464" alt="image" src="https://github.com/user-attachments/assets/f4d4e426-24ad-4806-95c9-9fd37362f2e0" />
+<img width="488" height="488" alt="image" src="https://github.com/user-attachments/assets/9b3d906a-f316-41fc-9d23-e76fc7b88e2b" />
 
 
 # PyTorch Surrogate Training
