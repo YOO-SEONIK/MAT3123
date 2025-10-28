@@ -358,8 +358,7 @@ $p_{pass}(t) = clip(p_{pass}(t), 10^{-6}, 1-10^{-6})$
 8단계에서 확정된 임계값 $\tau^{*}$ 에 대해, 다음 조건을 만족하는 시점을 위험 상태로 간주한다.
 
 
-$\mathrm{risk\_mask}(t)=\begin{cases}1, & \text{if } p_{\mathrm{pass}}(t)<\tau^{*},\\[2pt]
-0, & \text{otherwise.}\end{cases}$
+${risk}_{mask}(t)= \begin{cases} 1, & \text{if } p_{\text{pass}}(t)<\tau^{*},\\ 0, & \text{otherwise.}\end{cases}$
 
 
 
