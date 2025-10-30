@@ -156,9 +156,13 @@ REG에는 baseline_rmse, reg_results, baseline_models_dict 등이 함께 기록�
 
 먼저 모든 모델은 동일한 교차검증 설정(KFold(n_splits=5, shuffle=True, random_state=42))으로 공정 비교한다. 평가 기본 분할은 이전 단계에서 확정된 X_train/X_test, y_c_train/y_c_test를 사용한다.
 
-모델은 세가지를 사용하며 LogReg: StandardScaler → LogisticRegression(max_iter=200, solver="lbfgs") 파이프라인, 파라미터는 C ∈ {0.1, 1, 5, 10}, class_weight ∈ {None, "balanced"}를 GridSearchCV로 탐색한다.
+다음으로 세 가지 모델 구성을 정의한다.
 
-DT(DecisionTree): max_depth ∈ {None, 4, 6, 10}, min_samples_leaf ∈ {1, 3, 5}, class_weight ∈ {None, "balanced"}를 탐색하고, F(RandomForest): n_estimators ∈ {200, 400}, max_depth ∈ {None, 8, 12}, min_samples_leaf ∈ {1, 3}, class_weight ∈ {None, "balanced"}를 탐색한다.
+(1) LogReg: StandardScaler → LogisticRegression(max_iter=200, solver="lbfgs") 파이프라인, 파라미터는 C ∈ {0.1, 1, 5, 10}, class_weight ∈ {None, "balanced"}를 GridSearchCV로 탐색한다.
+
+(2) DT(DecisionTree): max_depth ∈ {None, 4, 6, 10}, min_samples_leaf ∈ {1, 3, 5}, class_weight ∈ {None, "balanced"}를 탐색한다.
+
+(3) F(RandomForest): n_estimators ∈ {200, 400}, max_depth ∈ {None, 8, 12}, min_samples_leaf ∈ {1, 3}, class_weight ∈ {None, "balanced"}를 탐색한다.
 
 GridSearchCV의 기본 scoring을 따르므로 내부 CV 선택 기준은 정확도(ACC) 이다. 탐색이 끝나면 각 모델은 해당 최적 파라미터로 전체 훈련 세트에 재학습된다.
 
